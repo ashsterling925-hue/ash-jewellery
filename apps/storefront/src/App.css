@@ -933,3 +933,37 @@ img {
     font-size: 14px;
   }
 }
+
+/* ================= PRODUCT THUMBNAILS ================= */
+
+.thumb-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.product-thumbnail {
+  width: 82px;
+  height: 82px;
+  padding: 0;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.25s ease, opacity 0.25s ease;
+}
+
+.product-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.product-thumbnail:hover {
+  opacity: 0.8;
+}
+
+.product-thumbnail.active-thumbnail {
+  border: 1px solid #b87820;
+}

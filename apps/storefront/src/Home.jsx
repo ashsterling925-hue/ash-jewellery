@@ -25,7 +25,7 @@ const categories = [
   },
   {
     name: "Necklaces",
-    image: "/jewellery/ash-hero-lady.jpg.png",
+    image: "/jewellery/ash-hero-lady.jpg",
     path: "/bangles",
   },
   {
