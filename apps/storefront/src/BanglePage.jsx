@@ -1,11 +1,12 @@
-import { ArrowLeft, Heart, Search, ShoppingBag } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "./router";
+import { Link } from "react-router-dom";
 import { useState } from "react";
+import SiteLayout from "./components/layout/SiteLayout";
 
 export default function BanglePage() {
   const [selectedImage, setSelectedImage] = useState(
-    "/jewellery/heritage-silver-bangle.jpg"
+    "/jewellery/heritage-silver-bangle.jpg",
   );
 
   const productImages = [
@@ -28,191 +29,88 @@ export default function BanglePage() {
   ];
 
   return (
-    <div className="bangle-page">
-
-      {/* ================= HEADER ================= */}
-
-      <header className="site-header">
-
-        <div className="header-main container">
-
-          <Link to="/" className="brand">
-            ASH <span>JEWELLERY</span>
+    <SiteLayout>
+      <div className="bangle-page">
+        <section className="product-page container">
+          <Link to="/" className="back-link">
+            <ArrowLeft size={15} />
+            Back to home
           </Link>
 
-          <nav className="desktop-nav">
+          <div className="product-layout">
+            {/* ================= GALLERY ================= */}
 
-            <Link to="/">
-              HOME
-            </Link>
+            <div className="product-gallery">
+              <div className="main-product-image">
+                <img src={selectedImage} alt="Heritage Silver Bangle" />
+              </div>
 
-            <Link to="/bangles" className="active">
-              BANGLES
-            </Link>
-
-            <a href="/#collections">
-              COLLECTIONS
-            </a>
-
-            <a href="/#story">
-              OUR STORY
-            </a>
-
-            <a href="/#contact">
-              CONTACT
-            </a>
-
-          </nav>
-
-          <div className="header-actions">
-
-            <button aria-label="Search">
-              <Search size={18} />
-            </button>
-
-            <button aria-label="Wishlist">
-              <Heart size={18} />
-            </button>
-
-            <button aria-label="Bag">
-              <ShoppingBag size={18} />
-            </button>
-
-          </div>
-
-        </div>
-
-      </header>
-
-
-      {/* ================= PRODUCT ================= */}
-
-      <main className="product-page container">
-
-        <Link to="/" className="back-link">
-          <ArrowLeft size={15} />
-          Back to home
-        </Link>
-
-
-        <div className="product-layout">
-
-          {/* ================= GALLERY ================= */}
-
-          <div className="product-gallery">
-
-            {/* MAIN IMAGE */}
-
-            <div className="main-product-image">
-
-              <img
-                src={selectedImage}
-                alt="Heritage Silver Bangle"
-              />
-
+              <div className="thumb-row">
+                {productImages.map((image) => (
+                  <button
+                    key={image.src}
+                    type="button"
+                    className={`product-thumbnail ${
+                      selectedImage === image.src ? "active-thumbnail" : ""
+                    }`}
+                    onClick={() => setSelectedImage(image.src)}
+                    aria-label={`View ${image.alt}`}
+                  >
+                    <img src={image.src} alt={image.alt} />
+                  </button>
+                ))}
+              </div>
             </div>
 
+            {/* ================= PRODUCT DETAILS ================= */}
 
-            {/* THUMBNAILS */}
+            <div className="product-details">
+              <p className="eyebrow">ASH HERITAGE COLLECTION</p>
 
-            <div className="thumb-row">
+              <h1>Heritage Silver Bangle</h1>
 
-              {productImages.map((image) => (
+              <p className="price">₹12,499</p>
 
-                <button
-                  key={image.src}
-                  type="button"
-                  className={`product-thumbnail ${
-                    selectedImage === image.src
-                      ? "active-thumbnail"
-                      : ""
-                  }`}
-                  onClick={() => setSelectedImage(image.src)}
-                  aria-label={`View ${image.alt}`}
-                >
+              <div className="detail-rule" />
 
-                  <img
-                    src={image.src}
-                    alt={image.alt}
-                  />
+              <p className="description">
+                Handcrafted from 925 sterling silver, inspired by traditional
+                Indian heritage and intricate filigree art. A timeless
+                masterpiece designed to become part of your story.
+              </p>
 
-                </button>
+              <ul className="spec-list">
+                <li>
+                  <span>Metal</span>
+                  925 Sterling Silver
+                </li>
 
-              ))}
+                <li>
+                  <span>Weight</span>
+                  45g
+                </li>
 
+                <li>
+                  <span>Finish</span>
+                  Antique Silver
+                </li>
+
+                <li>
+                  <span>Authenticity</span>
+                  Certificate Included
+                </li>
+              </ul>
+
+              <Button className="whatsapp-button">ENQUIRE ON WHATSAPP</Button>
+
+              <p className="small-note">
+                We will confirm availability, size and final details with you on
+                WhatsApp.
+              </p>
             </div>
-
           </div>
-
-
-          {/* ================= PRODUCT DETAILS ================= */}
-
-          <div className="product-details">
-
-            <p className="eyebrow">
-              ASH HERITAGE COLLECTION
-            </p>
-
-            <h1>
-              Heritage Silver Bangle
-            </h1>
-
-            <p className="price">
-              ₹12,499
-            </p>
-
-            <div className="detail-rule" />
-
-
-            <p className="description">
-              Handcrafted from 925 sterling silver,
-              inspired by traditional Indian heritage
-              and intricate filigree art. A timeless
-              masterpiece designed to become part of
-              your story.
-            </p>
-
-
-            <ul className="spec-list">
-
-              <li>
-                <span>Metal</span>
-                925 Sterling Silver
-              </li>
-
-              <li>
-                <span>Weight</span>
-                45g
-              </li>
-
-              <li>
-                <span>Finish</span>
-                Antique Silver
-              </li>
-
-              <li>
-                <span>Authenticity</span>
-                Certificate Included
-              </li>
-
-            </ul>
-
-
-            <Button className="whatsapp-button">
-              ENQUIRE ON WHATSAPP
-            </Button>
-
-            <p className="small-note">
-              We will confirm availability, size and
-              final details with you on WhatsApp.
-            </p>
-
-          </div>
-
-        </div>
-
-      </main>
-
-    </div>
+        </section>
+      </div>
+    </SiteLayout>
   );
 }

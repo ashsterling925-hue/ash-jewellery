@@ -38,81 +38,153 @@ img {
 }
 
 .container {
-  width: min(1180px, calc(100% - 48px));
+  width: min(var(--ash-container), calc(100% - 48px));
   margin-inline: auto;
 }
-
 
 /* =========================================================
    HEADER
 ========================================================= */
 
+/* =========================================================
+   HEADER — ASH PREMIUM STOREFRONT
+========================================================= */
+
 .site-header {
-  background: #fff;
-  border-bottom: 1px solid var(--line);
-  position: relative;
-  z-index: 10;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--ash-paper);
+  border-bottom: 1px solid var(--ash-line);
 }
 
 .header-main {
-  min-height: 74px;
+  min-height: var(--ash-header-height);
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(180px, 1fr) auto minmax(180px, 1fr);
   align-items: center;
-  gap: 30px;
+  gap: 32px;
 }
 
+/* ================= BRAND ================= */
+
 .brand {
+  display: inline-flex;
+  flex-direction: column;
+  width: fit-content;
+  color: var(--ash-ink);
   font-family: "Playfair Display Variable", Georgia, serif;
-  font-size: 29px;
-  letter-spacing: .16em;
+  font-size: 30px;
   font-weight: 500;
-  line-height: 1;
+  line-height: 0.9;
+  letter-spacing: 0.16em;
+  transition: color var(--ash-duration-fast) ease;
+}
+
+.brand:hover {
+  color: var(--ash-navy);
 }
 
 .brand span {
-  font-family: "Noto Sans Variable", sans-serif;
-  font-size: 8px;
-  letter-spacing: .38em;
   display: block;
-  margin-top: 7px;
-  color: #5f584f;
+  margin-top: 8px;
+  color: var(--ash-muted);
+  font-family: "Noto Sans Variable", sans-serif;
+  font-size: 7px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
 }
+
+/* ================= NAVIGATION ================= */
 
 .desktop-nav {
   display: flex;
-  gap: 34px;
   align-items: center;
+  justify-content: center;
+  gap: 32px;
+  height: 100%;
   font-size: 10px;
-  letter-spacing: .18em;
   font-weight: 600;
+  letter-spacing: 0.16em;
+  white-space: nowrap;
 }
 
 .desktop-nav a {
-  padding: 28px 0 23px;
-  border-bottom: 2px solid transparent;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  padding: 29px 0 27px;
+  border-bottom: 1px solid transparent;
+  color: var(--ash-ink);
+  transition:
+    color var(--ash-duration-fast) ease,
+    border-color var(--ash-duration-fast) ease;
 }
 
-.desktop-nav a:hover,
-.desktop-nav a.active {
-  color: var(--saffron);
-  border-color: var(--saffron);
+.desktop-nav a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--ash-saffron);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform var(--ash-duration-normal) var(--ash-ease);
 }
+
+.desktop-nav a:hover {
+  color: var(--ash-saffron);
+}
+
+.desktop-nav a:hover::after,
+.desktop-nav a.active::after {
+  transform: scaleX(1);
+}
+
+.desktop-nav a.active {
+  color: var(--ash-saffron);
+}
+
+/* ================= HEADER ACTIONS ================= */
 
 .header-actions {
   justify-self: end;
   display: flex;
-  gap: 20px;
+  align-items: center;
+  gap: 8px;
 }
 
 .header-actions button {
-  background: none;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  padding: 0;
   border: 0;
-  cursor: pointer;
-  padding: 4px;
-  color: #171614;
+  background: transparent;
+  color: var(--ash-ink);
+  transition:
+    color var(--ash-duration-fast) ease,
+    background var(--ash-duration-fast) ease;
 }
 
+.header-actions button:hover {
+  color: var(--ash-saffron);
+  background: var(--ash-surface);
+}
+
+.header-actions svg {
+  transition: transform var(--ash-duration-fast) var(--ash-ease);
+}
+
+.header-actions button:hover svg {
+  transform: scale(1.05);
+}
 
 /* =========================================================
    HERO
@@ -150,7 +222,6 @@ img {
   overflow: hidden;
 }
 
-
 /*
   Hero overlay.
 
@@ -162,15 +233,14 @@ img {
   position: absolute;
   inset: 0;
 
-  background:
-    linear-gradient(
-      90deg,
-      rgba(241, 226, 201, 0.88) 0%,
-      rgba(241, 226, 201, 0.68) 27%,
-      rgba(241, 226, 201, 0.20) 52%,
-      rgba(45, 29, 17, 0.08) 75%,
-      rgba(45, 29, 17, 0.18) 100%
-    );
+  background: linear-gradient(
+    90deg,
+    rgba(241, 226, 201, 0.88) 0%,
+    rgba(241, 226, 201, 0.68) 27%,
+    rgba(241, 226, 201, 0.2) 52%,
+    rgba(45, 29, 17, 0.08) 75%,
+    rgba(45, 29, 17, 0.18) 100%
+  );
 }
 
 .hero-content {
@@ -191,7 +261,7 @@ img {
 .hero-eyebrow {
   margin: 0 0 17px;
   font-size: 10px;
-  letter-spacing: .35em;
+  letter-spacing: 0.35em;
   font-weight: 600;
   color: #302a24;
 }
@@ -199,8 +269,8 @@ img {
 .hero-copy h1 {
   font-family: "Playfair Display Variable", Georgia, serif;
   font-size: clamp(45px, 5vw, 68px);
-  line-height: .98;
-  letter-spacing: .01em;
+  line-height: 0.98;
+  letter-spacing: 0.01em;
   font-weight: 500;
   margin: 0 0 18px;
   color: #151412;
@@ -222,9 +292,11 @@ img {
   color: white;
   padding: 15px 23px;
   font-size: 10px;
-  letter-spacing: .18em;
+  letter-spacing: 0.18em;
   font-weight: 700;
-  transition: background .25s ease, transform .25s ease;
+  transition:
+    background 0.25s ease,
+    transform 0.25s ease;
 }
 
 .primary-cta:hover {
@@ -242,7 +314,7 @@ img {
   line-height: 1.45;
   position: relative;
   z-index: 2;
-  text-shadow: 0 1px 5px rgba(0, 0, 0, .15);
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.15);
 }
 
 .hero-side-copy p {
@@ -252,10 +324,9 @@ img {
 .hero-side-line {
   width: 70px;
   height: 1px;
-  background: rgba(255, 255, 255, .8);
+  background: rgba(255, 255, 255, 0.8);
   margin-top: 18px;
 }
-
 
 /* HERO ARROWS */
 
@@ -270,7 +341,7 @@ img {
   border: 0;
   border-radius: 50%;
 
-  background: rgba(255, 255, 255, .86);
+  background: rgba(255, 255, 255, 0.86);
   color: #25221f;
 
   display: grid;
@@ -281,8 +352,8 @@ img {
   z-index: 5;
 
   transition:
-    background .2s ease,
-    transform .2s ease;
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 
 .hero-arrow:hover {
@@ -307,7 +378,7 @@ img {
   gap: 12px;
 
   font-size: 9px;
-  letter-spacing: .12em;
+  letter-spacing: 0.12em;
   color: #574d41;
 
   z-index: 3;
@@ -318,7 +389,6 @@ img {
   height: 1px;
   background: #b89967;
 }
-
 
 /* =========================================================
    TRUST STRIP
@@ -355,7 +425,7 @@ img {
 
   font-family: "Noto Sans Variable", Arial, sans-serif;
   font-size: 10px;
-  letter-spacing: .17em;
+  letter-spacing: 0.17em;
   font-weight: 700;
 }
 
@@ -364,7 +434,6 @@ img {
   color: var(--muted);
   font-size: 11px;
 }
-
 
 /* =========================================================
    SIGNATURE COLLECTIONS
@@ -411,7 +480,7 @@ img {
 }
 
 .signature-image {
-  aspect-ratio: .88 / 1;
+  aspect-ratio: 0.88 / 1;
   overflow: hidden;
   background: #eee6da;
 }
@@ -421,7 +490,7 @@ img {
   height: 100%;
   display: block;
   object-fit: cover;
-  transition: transform .45s ease;
+  transition: transform 0.45s ease;
 }
 
 .signature-card:hover .signature-image img {
@@ -436,7 +505,7 @@ img {
   font-family: "Playfair Display Variable", Georgia, serif;
   font-size: 16px;
   font-weight: 500;
-  letter-spacing: .12em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   margin: 0 0 9px;
 }
@@ -450,9 +519,8 @@ img {
 
   font-size: 8px;
   font-weight: 700;
-  letter-spacing: .18em;
+  letter-spacing: 0.18em;
 }
-
 
 /* =========================================================
    STORY
@@ -511,19 +579,18 @@ img {
   padding: 14px 20px;
 
   font-size: 10px;
-  letter-spacing: .15em;
+  letter-spacing: 0.15em;
   font-weight: 700;
 
   transition:
-    background .2s ease,
-    transform .2s ease;
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 
 .story-button:hover {
   background: #000;
   transform: translateY(-2px);
 }
-
 
 /* =========================================================
    FOOTER
@@ -537,7 +604,7 @@ img {
 
 .footer-grid {
   display: grid;
-  grid-template-columns: 1.4fr .8fr .9fr 1.4fr;
+  grid-template-columns: 1.4fr 0.8fr 0.9fr 1.4fr;
   gap: 40px;
 }
 
@@ -564,7 +631,7 @@ img {
 
 .footer-grid h4 {
   font-size: 9px;
-  letter-spacing: .18em;
+  letter-spacing: 0.18em;
   margin: 4px 0 15px;
   color: white;
 }
@@ -598,9 +665,8 @@ img {
   padding-top: 18px;
   color: #756f68;
   font-size: 8px;
-  letter-spacing: .14em;
+  letter-spacing: 0.14em;
 }
-
 
 /* =========================================================
    BANGLE PAGE
@@ -616,13 +682,13 @@ img {
   gap: 8px;
   color: var(--muted);
   font-size: 10px;
-  letter-spacing: .1em;
+  letter-spacing: 0.1em;
   margin: 0 0 28px;
 }
 
 .product-layout {
   display: grid;
-  grid-template-columns: 1.05fr .95fr;
+  grid-template-columns: 1.05fr 0.95fr;
   gap: 75px;
   align-items: start;
 }
@@ -715,13 +781,11 @@ img {
   margin-top: 12px;
 }
 
-
 /* =========================================================
    RESPONSIVE — TABLET
 ========================================================= */
 
 @media (max-width: 1000px) {
-
   .desktop-nav {
     gap: 17px;
   }
@@ -748,13 +812,11 @@ img {
   }
 }
 
-
 /* =========================================================
    RESPONSIVE — MOBILE
 ========================================================= */
 
 @media (max-width: 900px) {
-
   .desktop-nav {
     display: none;
   }
@@ -794,13 +856,11 @@ img {
   }
 }
 
-
 /* =========================================================
    SMALL MOBILE
 ========================================================= */
 
 @media (max-width: 600px) {
-
   .container {
     width: min(100% - 28px, 1180px);
   }
@@ -826,14 +886,13 @@ img {
     Lighter overlay so the lady remains visible.
   */
   .hero-overlay {
-    background:
-      linear-gradient(
-        90deg,
-        rgba(241, 226, 201, .93) 0%,
-        rgba(241, 226, 201, .70) 38%,
-        rgba(241, 226, 201, .28) 72%,
-        rgba(45, 29, 17, .12) 100%
-      );
+    background: linear-gradient(
+      90deg,
+      rgba(241, 226, 201, 0.93) 0%,
+      rgba(241, 226, 201, 0.7) 38%,
+      rgba(241, 226, 201, 0.28) 72%,
+      rgba(45, 29, 17, 0.12) 100%
+    );
   }
 
   .hero-copy {
@@ -899,13 +958,11 @@ img {
   }
 }
 
-
 /* =========================================================
    VERY SMALL PHONES
 ========================================================= */
 
 @media (max-width: 420px) {
-
   .hero-banner {
     height: 600px;
     min-height: 600px;
@@ -950,7 +1007,9 @@ img {
   background: transparent;
   cursor: pointer;
   overflow: hidden;
-  transition: border-color 0.25s ease, opacity 0.25s ease;
+  transition:
+    border-color 0.25s ease,
+    opacity 0.25s ease;
 }
 
 .product-thumbnail img {
@@ -966,4 +1025,346 @@ img {
 
 .product-thumbnail.active-thumbnail {
   border: 1px solid #b87820;
+}
+
+/* =========================================================
+   A9 — MOBILE HEADER
+   ========================================================= */
+
+.mobile-menu-toggle {
+  display: none;
+}
+
+.mobile-nav {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .header-main {
+    min-height: 68px;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+  }
+
+  .desktop-nav {
+    display: none;
+  }
+
+  .brand {
+    font-size: 27px;
+  }
+
+  .header-actions {
+    gap: 2px;
+  }
+
+  .header-actions button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .mobile-menu-toggle {
+    display: grid !important;
+  }
+
+  .mobile-nav {
+    display: grid;
+    grid-template-rows: 0fr;
+    overflow: hidden;
+    background: var(--ash-paper);
+    border-top: 1px solid transparent;
+    transition:
+      grid-template-rows var(--ash-duration-normal) var(--ash-ease),
+      border-color var(--ash-duration-normal) ease;
+  }
+
+  .mobile-nav.open {
+    grid-template-rows: 1fr;
+    border-top-color: var(--ash-line);
+  }
+
+  .mobile-nav-inner {
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 0 24px;
+  }
+
+  .mobile-nav a {
+    display: flex;
+    align-items: center;
+    min-height: 54px;
+    border-bottom: 1px solid var(--ash-line);
+    color: var(--ash-ink);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    transition:
+      color var(--ash-duration-fast) ease,
+      padding-left var(--ash-duration-fast) ease;
+  }
+
+  .mobile-nav a:last-child {
+    border-bottom: 0;
+  }
+
+  .mobile-nav a:hover,
+  .mobile-nav a.active {
+    color: var(--ash-saffron);
+  }
+
+  .mobile-nav a:hover {
+    padding-left: 4px;
+  }
+}
+
+/* =========================================================
+   ASH BRAND LOGO
+   ========================================================= */
+
+.brand-logo {
+  display: inline;
+  width: 300px;
+  height: 90px;
+  object-fit: contain;
+  object-position: center;
+}
+
+/* =========================================================
+   A11.1 — HERO DESKTOP REDESIGN
+   ========================================================= */
+
+.hero-banner {
+  position: relative;
+  height: 560px;
+  min-height: 560px;
+  overflow: hidden;
+  background: var(--ash-surface);
+  isolation: isolate;
+}
+
+/* ---------------------------------------------------------
+   HERO IMAGE
+   --------------------------------------------------------- */
+
+.hero-image-wrap {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 62%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.hero-background-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center center;
+}
+
+/* ---------------------------------------------------------
+   HERO OVERLAY
+   --------------------------------------------------------- */
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+
+  background: linear-gradient(
+    90deg,
+    var(--ash-surface) 0%,
+    rgba(246, 241, 232, 0.98) 28%,
+    rgba(246, 241, 232, 0.76) 42%,
+    rgba(246, 241, 232, 0.08) 64%,
+    rgba(246, 241, 232, 0) 100%
+  );
+}
+
+/* ---------------------------------------------------------
+   HERO CONTENT
+   --------------------------------------------------------- */
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hero-copy {
+  width: 48%;
+  max-width: 590px;
+  padding-top: 0;
+}
+
+.hero-eyebrow {
+  margin: 0 0 18px;
+
+  color: var(--ash-saffron);
+
+  font-family: "Noto Sans Variable", sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+}
+
+.hero-copy h1 {
+  margin: 0 0 22px;
+
+  color: var(--ash-ink);
+
+  font-family: "Playfair Display Variable", Georgia, serif;
+  font-size: clamp(48px, 5vw, 72px);
+  font-weight: 500;
+  line-height: 0.98;
+  letter-spacing: -0.015em;
+}
+
+.hero-description {
+  max-width: 480px;
+  margin: 0 0 28px;
+
+  color: var(--ash-muted);
+
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+/* ---------------------------------------------------------
+   HERO SIDE SIGNATURE
+   --------------------------------------------------------- */
+
+.hero-side-copy {
+  width: 38%;
+  margin-right: 24px;
+
+  color: var(--ash-white);
+
+  font-family: "Playfair Display Variable", Georgia, serif;
+  font-size: 27px;
+  font-style: italic;
+  line-height: 1.35;
+
+  position: relative;
+  z-index: 3;
+
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
+}
+
+.hero-side-copy p {
+  margin: 0;
+}
+
+.hero-side-line {
+  width: 65px;
+  height: 1px;
+  margin-top: 18px;
+
+  background: rgba(255, 255, 255, 0.8);
+}
+
+/* ---------------------------------------------------------
+   HERO ARROWS
+   --------------------------------------------------------- */
+
+.hero-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 44px;
+  height: 44px;
+
+  display: grid;
+  place-items: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--ash-ink);
+
+  cursor: pointer;
+  z-index: 5;
+
+  transition:
+    background var(--ash-duration-fast) ease,
+    transform var(--ash-duration-fast) var(--ash-ease);
+}
+
+.hero-arrow:hover {
+  background: var(--ash-white);
+  transform: translateY(-50%) scale(1.04);
+}
+
+.hero-arrow-left {
+  left: 24px;
+}
+
+.hero-arrow-right {
+  right: 24px;
+}
+
+/* ---------------------------------------------------------
+   HERO SLIDE INDICATOR
+   --------------------------------------------------------- */
+
+.hero-slide-number {
+  position: absolute;
+  left: max(24px, calc((100% - var(--ash-container)) / 2));
+  bottom: 25px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  color: var(--ash-muted);
+
+  font-size: 9px;
+  letter-spacing: 0.12em;
+
+  z-index: 4;
+}
+
+.hero-slide-number div {
+  width: 70px;
+  height: 1px;
+  background: var(--ash-gold);
+}
+
+/* =========================================================
+   HERO — HIDE TEXT BAKED INTO SVG
+   ========================================================= */
+
+.hero-banner {
+  position: relative;
+}
+
+
+
+.hero-content {
+  position: relative;
+  z-index: 3;
+}
+
+.hero-image-wrap {
+  z-index: 0;
+}
+
+.hero-overlay {
+  display: none;
+}
+
+.hero-image-wrap {
+  width: 100%;
+  left: 0;
+  right: 0;
 }
