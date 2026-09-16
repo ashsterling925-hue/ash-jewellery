@@ -51,6 +51,8 @@ function Home() {
 
         {/* ================= HERO ================= */}
 
+        {/* ================= HERO ================= */}
+
         <section className="hero-banner">
           <div className="hero-image-wrap">
             <img
@@ -60,71 +62,10 @@ function Home() {
             />
           </div>
 
-          
-
-          <button
-            type="button"
-            className="hero-arrow hero-arrow-left"
-            aria-label="Previous slide"
-          >
-            <ChevronLeft size={25} />
-          </button>
-
-          <button
-            type="button"
-            className="hero-arrow hero-arrow-right"
-            aria-label="Next slide"
-          >
-            <ChevronRight size={25} />
-          </button>
-
-          <div className="hero-slide-number">
-            <span>01</span>
-            <div></div>
-            <span>03</span>
-          </div>
-        </section>
-
-        {/* ================= TRUST STRIP ================= */}
-
-        <section className="trust-strip">
-          <div className="container trust-grid">
-            <div className="trust-item">
-              <Leaf size={36} strokeWidth={1.3} />
-
-              <div>
-                <h3>PURE 925 SILVER</h3>
-                <p>Authentic & Hallmarked</p>
-              </div>
-            </div>
-
-            <div className="trust-item">
-              <Gem size={36} strokeWidth={1.3} />
-
-              <div>
-                <h3>HANDCRAFTED</h3>
-                <p>By Skilled Artisans</p>
-              </div>
-            </div>
-
-            <div className="trust-item">
-              <Flower2 size={36} strokeWidth={1.3} />
-
-              <div>
-                <h3>INSPIRED BY TRADITION</h3>
-                <p>Designed for Today</p>
-              </div>
-            </div>
-
-            <div className="trust-item">
-              <Truck size={36} strokeWidth={1.3} />
-
-              <div>
-                <h3>PAN INDIA SHIPPING</h3>
-                <p>Safe & Secure Delivery</p>
-              </div>
-            </div>
-          </div>
+          <Link to="/bangles" className="hero-collection-button">
+            EXPLORE COLLECTIONS
+            <ArrowRight size={17} />
+          </Link>
         </section>
 
         {/* ================= CATEGORIES ================= */}
