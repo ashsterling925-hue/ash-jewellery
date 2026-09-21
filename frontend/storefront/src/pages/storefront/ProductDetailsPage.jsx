@@ -2,28 +2,32 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import SiteLayout from "./components/layout/SiteLayout";
+import heritageBangle from "../../assets/jewellery/heritage-silver-bangle.jpg";
+import bangle1 from "../../assets/jewellery/bangle-1.jpg";
+import bangle5 from "../../assets/jewellery/bangle-5.jpg";
+import bangle3 from "../../assets/jewellery/bangle-3.jpg";
+import SiteLayout from "../../components/layout/SiteLayout";
 
-export default function BanglePage() {
+export default function ProductDetailsPage() {
   const [selectedImage, setSelectedImage] = useState(
-    "/jewellery/heritage-silver-bangle.jpg",
+    heritageBangle,
   );
 
   const productImages = [
     {
-      src: "/jewellery/heritage-silver-bangle.jpg",
+      src: heritageBangle,
       alt: "Heritage Silver Bangle",
     },
     {
-      src: "/jewellery/bangle-1.jpg",
+      src: bangle1,
       alt: "Bangle detail 1",
     },
     {
-      src: "/jewellery/bangle-5.jpg",
+      src: bangle5,
       alt: "Bangle detail 2",
     },
     {
-      src: "/jewellery/bangle-3.jpg",
+      src: bangle3,
       alt: "Bangle detail 3",
     },
   ];
