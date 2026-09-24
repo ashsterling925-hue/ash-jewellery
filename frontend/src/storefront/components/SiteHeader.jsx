@@ -1,8 +1,6 @@
 import {
   Heart,
-  Menu,
   Search,
-  ShoppingBag,
   X,
   User,
   LogOut,
@@ -353,30 +351,7 @@ function SiteHeader() {
             <Heart size={20} strokeWidth={1.6} />
           </button>
 
-          {/* Shopping Bag */}
-          <button type="button" aria-label="Shopping bag">
-            <ShoppingBag size={20} strokeWidth={1.6} />
-          </button>
 
-          {/* Mobile Menu Toggle */}
-          <button
-            type="button"
-            className="mobile-menu-toggle"
-            aria-label={
-              isMobileMenuOpen
-                ? "Close navigation menu"
-                : "Open navigation menu"
-            }
-            aria-expanded={isMobileMenuOpen}
-            aria-controls="mobile-navigation"
-            onClick={() => setIsMobileMenuOpen((current) => !current)}
-          >
-            {isMobileMenuOpen ? (
-              <X size={21} strokeWidth={1.6} />
-            ) : (
-              <Menu size={21} strokeWidth={1.6} />
-            )}
-          </button>
         </div>
       </div>
 
