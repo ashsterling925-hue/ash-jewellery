@@ -18,13 +18,22 @@ const dateTransform = z
 // 1. HERO VALIDATION
 // ==========================================
 
+export const heroSlideItemSchema = z.object({
+  id: z.string().optional(),
+  mediaAssetId: z.string().trim().optional().nullable(),
+  url: z.string().min(1, "Slide image URL is required"),
+  altText: z.string().trim().optional().nullable(),
+  sortOrder: z.coerce.number().int().optional().default(0),
+});
+
 export const heroSchema = z.object({
-  heading: z.string().trim().min(1, "Hero heading is required"),
+  heading: z.string().trim().optional().nullable(),
   subheading: z.string().trim().optional().nullable(),
   mediaAssetId: z.string().trim().optional().nullable(),
   buttonText: z.string().trim().optional().nullable(),
   buttonUrl: z.string().trim().optional().nullable(),
   status: statusEnum.default("ACTIVE"),
+  slides: z.array(heroSlideItemSchema).optional(),
 });
 
 export const updateHeroSchema = heroSchema.partial().refine(
@@ -37,11 +46,11 @@ export const updateHeroSchema = heroSchema.partial().refine(
 // ==========================================
 
 export const createBannerSchema = z.object({
-  title: z.string().trim().min(1, "Banner title is required"),
+  title: z.string().trim().optional().default("Hero Banner"),
   subtitle: z.string().trim().optional().nullable(),
   mediaAssetId: z.string().trim().optional().nullable(),
   targetUrl: z.string().trim().optional().nullable(),
-  position: z.string().trim().optional().default("HOME_PROMOTION"),
+  position: z.string().trim().optional().default("HERO_SLIDE"),
   status: statusEnum.default("ACTIVE"),
   sortOrder: z.coerce.number().int().optional().default(0),
   startAt: dateTransform,

@@ -2,13 +2,8 @@ import {
   ArrowLeft,
   Save,
   Upload,
-  X,
-  Plus,
   Trash2,
-  Image as ImageIcon,
   Star,
-  ChevronUp,
-  ChevronDown,
   Loader2,
   FolderTree,
 } from "lucide-react";
@@ -41,11 +36,18 @@ export default function AddProduct() {
     description: "",
     price: "",
     metal: "925 Sterling Silver",
+    finish: "",
     gender: "Women",
     categoryId: "",
     subcategoryId: "",
     status: "published",
-    stockQuantity: "10",
+    stockQuantity: "0",
+    isBestSeller: false,
+    isNewArrival: false,
+    isFeatured: false,
+    isTrending: false,
+    displayPriority: "0",
+    newArrivalUntil: "",
   });
 
   // Load categories and subcategories
@@ -230,11 +232,18 @@ export default function AddProduct() {
         price: Number(formData.price),
         material: formData.metal?.trim() || null,
         metal: formData.metal?.trim() || null,
+        finish: formData.finish?.trim() || null,
         gender: formData.gender?.trim() || null,
         categoryId: formData.categoryId,
         subcategoryId: formData.subcategory || formData.subcategoryId || null,
         status: (formData.status || "published").toUpperCase(),
-        stockQuantity: Number(formData.stockQuantity || 10),
+        stockQuantity: Number(formData.stockQuantity !== "" && !isNaN(Number(formData.stockQuantity)) ? formData.stockQuantity : 0),
+        isBestSeller: Boolean(formData.isBestSeller),
+        isNewArrival: Boolean(formData.isNewArrival),
+        isFeatured: Boolean(formData.isFeatured),
+        isTrending: Boolean(formData.isTrending),
+        displayPriority: Number(formData.displayPriority) || 0,
+        newArrivalUntil: formData.newArrivalUntil ? formData.newArrivalUntil : null,
         images: images.map((img, idx) => ({
           url: img.url,
           mediaAssetId: img.mediaAssetId || null,
@@ -378,6 +387,28 @@ export default function AddProduct() {
                 </select>
               </div>
 
+              {/* Finish */}
+              <div className="form-field">
+                <label>Finish (Optional)</label>
+                <input
+                  type="text"
+                  name="finish"
+                  list="finish-options"
+                  value={formData.finish}
+                  onChange={handleChange}
+                  placeholder="e.g. Antique Silver, High Polish, Oxidised..."
+                />
+                <datalist id="finish-options">
+                  <option value="Antique Silver" />
+                  <option value="High Polish Silver" />
+                  <option value="Oxidised Silver" />
+                  <option value="Matte / Brushed Silver" />
+                  <option value="18K Gold Plated" />
+                  <option value="Rose Gold Plated" />
+                  <option value="Dual Tone Silver" />
+                </datalist>
+              </div>
+
               {/* Gender */}
               <div className="form-field">
                 <label>
@@ -501,6 +532,136 @@ export default function AddProduct() {
                 </div>
               </div>
             )}
+          </section>
+
+          {/* Card 3: Homepage Merchandising */}
+          <section className="form-card">
+            <div className="form-card-header">
+              <div>
+                <span className="form-section-label">03</span>
+                <h2>Homepage Merchandising</h2>
+                <p>Controls where this product appears on dynamic homepage sections.</p>
+              </div>
+            </div>
+
+            <div className="form-grid">
+              {/* Merchandising Checkboxes Grid */}
+              <div className="form-field full-width">
+                <label className="text-xs uppercase tracking-wider text-[#b99657] font-semibold mb-3 block">
+                  Featured Sections
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Best Seller */}
+                  <label className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition-all ${
+                    formData.isBestSeller ? "border-[#b99657] bg-[#b99657]/10" : "border-[#383531] bg-[#181614] hover:border-[#4d4842]"
+                  }`}>
+                    <input
+                      type="checkbox"
+                      name="isBestSeller"
+                      checked={formData.isBestSeller}
+                      onChange={(e) => setFormData(prev => ({ ...prev, isBestSeller: e.target.checked }))}
+                      className="mt-1 accent-[#b99657] w-4 h-4 cursor-pointer"
+                    />
+                    <div>
+                      <strong className="block text-sm text-[#f5f5f4] font-medium">Best Seller</strong>
+                      <span className="text-[11px] text-[#8a8277]">Appear in Best Sellers section</span>
+                    </div>
+                  </label>
+
+                  {/* New Arrival */}
+                  <label className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition-all ${
+                    formData.isNewArrival ? "border-[#b99657] bg-[#b99657]/10" : "border-[#383531] bg-[#181614] hover:border-[#4d4842]"
+                  }`}>
+                    <input
+                      type="checkbox"
+                      name="isNewArrival"
+                      checked={formData.isNewArrival}
+                      onChange={(e) => setFormData(prev => ({ ...prev, isNewArrival: e.target.checked }))}
+                      className="mt-1 accent-[#b99657] w-4 h-4 cursor-pointer"
+                    />
+                    <div>
+                      <strong className="block text-sm text-[#f5f5f4] font-medium">New Arrival</strong>
+                      <span className="text-[11px] text-[#8a8277]">Appear in New Arrivals section</span>
+                    </div>
+                  </label>
+
+                  {/* Featured */}
+                  <label className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition-all ${
+                    formData.isFeatured ? "border-[#b99657] bg-[#b99657]/10" : "border-[#383531] bg-[#181614] hover:border-[#4d4842]"
+                  }`}>
+                    <input
+                      type="checkbox"
+                      name="isFeatured"
+                      checked={formData.isFeatured}
+                      onChange={(e) => setFormData(prev => ({ ...prev, isFeatured: e.target.checked }))}
+                      className="mt-1 accent-[#b99657] w-4 h-4 cursor-pointer"
+                    />
+                    <div>
+                      <strong className="block text-sm text-[#f5f5f4] font-medium">Featured</strong>
+                      <span className="text-[11px] text-[#8a8277]">Appear in Featured Collection</span>
+                    </div>
+                  </label>
+
+                  {/* Trending */}
+                  <label className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition-all ${
+                    formData.isTrending ? "border-[#b99657] bg-[#b99657]/10" : "border-[#383531] bg-[#181614] hover:border-[#4d4842]"
+                  }`}>
+                    <input
+                      type="checkbox"
+                      name="isTrending"
+                      checked={formData.isTrending}
+                      onChange={(e) => setFormData(prev => ({ ...prev, isTrending: e.target.checked }))}
+                      className="mt-1 accent-[#b99657] w-4 h-4 cursor-pointer"
+                    />
+                    <div>
+                      <strong className="block text-sm text-[#f5f5f4] font-medium">Trending</strong>
+                      <span className="text-[11px] text-[#8a8277]">Appear in Trending section</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Display Priority */}
+              <div className="form-field">
+                <label htmlFor="displayPriority" className="font-semibold text-xs text-[#f5f5f4]">
+                  Display Priority
+                </label>
+                <input
+                  id="displayPriority"
+                  type="number"
+                  name="displayPriority"
+                  value={formData.displayPriority}
+                  onChange={handleChange}
+                  placeholder="0"
+                  className="w-full mt-1.5 p-2 bg-[#181614] border border-[#383531] text-[#f5f5f4] rounded text-sm focus:border-[#b99657] outline-none"
+                />
+                <p className="text-[11px] text-[#8a8277] mt-1">
+                  Higher numbers appear first in homepage sections (e.g. 10 before 1). Defaults to 0.
+                </p>
+              </div>
+
+              {/* New Arrival Until */}
+              <div className="form-field">
+                <label htmlFor="newArrivalUntil" className="font-semibold text-xs text-[#f5f5f4] flex items-center justify-between">
+                  <span>New Arrival Until</span>
+                  {!formData.isNewArrival && (
+                    <span className="text-[10px] text-[#8a8277] font-normal uppercase">Only if New Arrival enabled</span>
+                  )}
+                </label>
+                <input
+                  id="newArrivalUntil"
+                  type="date"
+                  name="newArrivalUntil"
+                  value={formData.newArrivalUntil || ""}
+                  onChange={handleChange}
+                  disabled={!formData.isNewArrival}
+                  className="w-full mt-1.5 p-2 bg-[#181614] border border-[#383531] text-[#f5f5f4] rounded text-sm focus:border-[#b99657] outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+                />
+                <p className="text-[11px] text-[#8a8277] mt-1">
+                  Optional expiry date. After this date passes, the product automatically stops appearing in New Arrivals. Leave empty for indefinite.
+                </p>
+              </div>
+            </div>
           </section>
         </div>
 

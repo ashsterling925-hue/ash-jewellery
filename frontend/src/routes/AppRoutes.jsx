@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 // Storefront pages
 import HomePage from "@/storefront/pages/HomePage";
@@ -12,6 +13,28 @@ import ResetPasswordPage from "@/storefront/pages/auth/ResetPasswordPage";
 // Authentication & Route Guards
 import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/routes/ProtectedRoute";
+
+/**
+ * Guard that prevents administrative users (SUPER_ADMIN, ADMIN, STAFF)
+ * from viewing the customer-facing storefront website.
+ * Any logged-in admin is automatically redirected to /admin/dashboard.
+ */
+function StorefrontGuard() {
+  const { user, isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return null;
+  }
+
+  if (isAuthenticated && user?.role) {
+    const role = user.role.toUpperCase();
+    if (role === "SUPER_ADMIN" || role === "ADMIN" || role === "STAFF") {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
+  }
+
+  return <Outlet />;
+}
 
 // Admin layout
 import AdminLayout from "@/admin/layouts/AdminLayout";
@@ -51,18 +74,23 @@ export default function AppRoutes() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Storefront Routes */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/product/:slug" element={<ProductDetailsPage />} />
-          <Route path="/category/:categorySlug" element={<CataloguePage />} />
-          <Route path="/subcategory/:subcategorySlug" element={<CataloguePage />} />
-          <Route path="/collection/:collectionSlug" element={<CataloguePage />} />
-          <Route path="/search" element={<CataloguePage />} />
-          <Route path="/bangles" element={<CataloguePage forcedCategorySlug="bangles" />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          {/* Storefront Routes (Blocked for logged-in Admin/Staff users) */}
+          <Route element={<StorefrontGuard />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/product/:slug" element={<ProductDetailsPage />} />
+            <Route path="/category" element={<CataloguePage />} />
+            <Route path="/catalogue" element={<CataloguePage />} />
+            <Route path="/collections" element={<CataloguePage />} />
+            <Route path="/category/:categorySlug" element={<CataloguePage />} />
+            <Route path="/subcategory/:subcategorySlug" element={<CataloguePage />} />
+            <Route path="/collection/:collectionSlug" element={<CataloguePage />} />
+            <Route path="/search" element={<CataloguePage />} />
+            <Route path="/bangles" element={<CataloguePage forcedCategorySlug="bangles" />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+          </Route>
 
           {/* Admin Routes (Protected) */}
           <Route

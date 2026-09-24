@@ -8,6 +8,7 @@ import {
   LogOut,
   ShieldCheck,
   ChevronDown,
+  ArrowRight,
 } from "lucide-react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -20,9 +21,11 @@ function SiteHeader() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [categories, setCategories] = useState([]);
-  const [isCollectionsOpen, setIsCollectionsOpen] = useState(false);
-  const [isMobileCollectionsOpen, setIsMobileCollectionsOpen] = useState(false);
+  const [activeCategoryDropdown, setActiveCategoryDropdown] = useState(null);
+  const [expandedMobileCat, setExpandedMobileCat] = useState(null);
+
   const userMenuRef = useRef(null);
+  const hoverTimeoutRef = useRef(null);
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
 
@@ -58,8 +61,34 @@ function SiteHeader() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleCategoryMouseEnter = (slug) => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    setActiveCategoryDropdown(slug);
+  };
+
+  const handleCategoryMouseLeave = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    hoverTimeoutRef.current = setTimeout(() => {
+      setActiveCategoryDropdown(null);
+    }, 220);
+  };
+
+  const closeDropdown = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    setActiveCategoryDropdown(null);
+  };
+
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
+    setExpandedMobileCat(null);
   };
 
   const handleLogout = async () => {
@@ -79,9 +108,10 @@ function SiteHeader() {
   };
 
   return (
-    <header className="site-header">
+    <header className="site-header relative">
       <div className="header-main container">
-        <Link to="/" className="brand" aria-label="ASH Jewellery home">
+        {/* Brand / Logo */}
+        <Link to="/" className="brand" aria-label="ASH Jewellery home" onClick={closeDropdown}>
           <img
             src="/jewellery/ash-logo.svg"
             alt="ASH Silver Jewellery"
@@ -91,149 +121,156 @@ function SiteHeader() {
 
         {/* Desktop Navigation */}
         <nav className="desktop-nav" aria-label="Main navigation">
+          {/* 1. HOME */}
           <NavLink
             to="/"
             end
             className={({ isActive }) => (isActive ? "active" : undefined)}
+            onClick={closeDropdown}
           >
             HOME
           </NavLink>
 
-          {/* COLLECTIONS HOVER DROPDOWN */}
-          <div
-            className="relative"
-            onMouseEnter={() => setIsCollectionsOpen(true)}
-            onMouseLeave={() => setIsCollectionsOpen(false)}
+          {/* 2. ALL JEWELLERY */}
+          <NavLink
+            to="/category"
+            end
+            className={({ isActive }) => (isActive ? "active" : undefined)}
+            onClick={closeDropdown}
           >
-            <Link
-              to="/#collections"
-              className={`inline-flex items-center gap-1.5 transition-colors uppercase ${
-                isCollectionsOpen ? "text-[#b99657] font-semibold" : ""
-              }`}
-            >
-              COLLECTIONS
-              <ChevronDown
-                size={13}
-                className={`transition-transform duration-200 ${
-                  isCollectionsOpen ? "rotate-180 text-[#b99657]" : "text-[#8a7f72]"
-                }`}
-              />
-            </Link>
+            ALL JEWELLERY
+          </NavLink>
 
-            {/* Hover Menu */}
-            {isCollectionsOpen && (
-              <div className="absolute left-0 top-full pt-3 z-50 min-w-[320px] max-w-[650px] w-max">
-                <div className="bg-[#fffdfa] border border-[#e7ded3] shadow-2xl p-6 text-left">
-                  <div className="flex items-center justify-between border-b border-[#eee5d8] pb-3 mb-4">
-                    <span className="text-[10px] font-bold tracking-[0.25em] text-[#b99657] uppercase font-serif">
-                      OUR SIGNATURE COLLECTIONS
-                    </span>
-                    <a
-                      href="/#collections"
-                      onClick={() => setIsCollectionsOpen(false)}
-                      className="text-[10px] font-semibold text-[#665e52] hover:text-[#1e1c19] tracking-wider uppercase transition-colors"
-                    >
-                      View All &rarr;
-                    </a>
-                  </div>
+          {/* 3. DYNAMIC CATEGORY TABS WITH HOVER DIALOG */}
+          {categories.map((cat) => {
+            const isDropdownOpen = activeCategoryDropdown === cat.slug;
+            const subcategories = cat.subcategories || [];
+            const hasSubcategories = subcategories.length > 0;
 
-                  {categories.length > 0 ? (
-                    <div
-                      className={`grid gap-x-8 gap-y-6 ${
-                        categories.length === 1
-                          ? "grid-cols-1"
-                          : categories.length === 2
-                          ? "grid-cols-2"
-                          : "grid-cols-3"
-                      }`}
-                    >
-                      {categories.map((category) => {
-                        const subcats = category.subcategories || [];
-                        return (
-                          <div key={category.id || category.slug} className="space-y-2">
-                            {/* Category Header Link */}
-                            <Link
-                              to={`/category/${category.slug}`}
-                              onClick={() => setIsCollectionsOpen(false)}
-                              className="block font-serif text-sm font-medium tracking-wide text-[#1e1c19] hover:text-[#b99657] transition-colors border-b border-[#f1eadf] pb-1.5"
-                            >
-                              {category.name}
-                            </Link>
-
-                            {/* Subcategories underneath category */}
-                            {subcats.length > 0 ? (
-                              <ul className="space-y-1 pl-1">
-                                {subcats.map((subcat) => (
-                                  <li key={subcat.id || subcat.slug}>
-                                    <Link
-                                      to={`/category/${category.slug}?subcategory=${subcat.slug}`}
-                                      onClick={() => setIsCollectionsOpen(false)}
-                                      className="text-xs text-[#6e675b] hover:text-[#b99657] transition-colors block py-0.5"
-                                    >
-                                      {subcat.name}
-                                    </Link>
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              <Link
-                                to={`/category/${category.slug}`}
-                                onClick={() => setIsCollectionsOpen(false)}
-                                className="text-[11px] text-[#9b9285] hover:text-[#b99657] italic block transition-colors"
-                              >
-                                Explore {category.name}
-                              </Link>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="py-4 text-center text-xs text-[#8a8277]">
-                      <p>No active categories yet.</p>
-                      <a
-                        href="/#collections"
-                        onClick={() => setIsCollectionsOpen(false)}
-                        className="mt-2 inline-block text-xs font-semibold text-[#b99657] underline"
-                      >
-                        Explore Collections
-                      </a>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <a href="/#story">OUR STORY</a>
-          <a href="/#contact">CONTACT</a>
-
-          {/* Authentication Navigation Link */}
-          {isAuthenticated ? (
-            (user?.role === "SUPER_ADMIN" ||
-              user?.role === "ADMIN" ||
-              user?.role === "STAFF") && (
-              <NavLink
-                to="/admin/dashboard"
-                className={({ isActive }) =>
-                  `transition-colors ${
-                    isActive
-                      ? "active text-[#b99657]"
-                      : "text-[#b99657] hover:text-[#97753e]"
-                  }`
-                }
+            return (
+              <div
+                key={cat.id || cat.slug}
+                className="category-nav-wrapper relative h-full flex items-center"
+                onMouseEnter={() => handleCategoryMouseEnter(cat.slug)}
+                onMouseLeave={handleCategoryMouseLeave}
               >
-                ADMIN
-              </NavLink>
-            )
-          ) : (
-            <NavLink
-              to="/login"
-              className={({ isActive }) => (isActive ? "active" : undefined)}
-            >
-              LOGIN
-            </NavLink>
-          )}
+                <NavLink
+                  to={`/category/${cat.slug}`}
+                  className={({ isActive }) =>
+                    `category-nav-link inline-flex items-center gap-1.5 transition-colors uppercase ${
+                      isActive ? "active" : ""
+                    } ${isDropdownOpen ? "text-[#b99657] font-semibold" : ""}`
+                  }
+                  onClick={closeDropdown}
+                >
+                  <span>{cat.name}</span>
+                  {hasSubcategories && (
+                    <ChevronDown
+                      size={12}
+                      className={`transition-transform duration-200 ${
+                        isDropdownOpen ? "rotate-180 text-[#b99657]" : "text-[#8a7f72]"
+                      }`}
+                    />
+                  )}
+                </NavLink>
+
+                {/* Dropdown Dialog on Hover */}
+                {isDropdownOpen && (
+                  <div
+                    className="category-dropdown-dialog absolute top-full left-1/2 -translate-x-1/2 z-50 pt-1.5 animate-in fade-in-50 slide-in-from-top-1 duration-150"
+                    onMouseEnter={() => handleCategoryMouseEnter(cat.slug)}
+                    onMouseLeave={handleCategoryMouseLeave}
+                  >
+                    {/* Tiny Triangle Caret */}
+                    <div className="dropdown-caret mx-auto w-2.5 h-2.5 bg-[#fffdfa] border-l border-t border-[#e8ded2] rotate-45 -mb-1 relative z-10" />
+
+                    {/* Dropdown Card */}
+                    <div className="bg-[#fffdfa] border border-[#e8ded2] rounded-xl shadow-2xl p-4 min-w-[280px] max-w-[340px] text-left">
+                      {/* Header */}
+                      <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-[#f1eadf]">
+                        <div>
+                          <span className="text-[9px] font-bold tracking-[0.2em] text-[#b99657] uppercase block font-sans">
+                            Category
+                          </span>
+                          <h4 className="font-serif text-sm font-medium text-[#1e1c19] tracking-wide">
+                            {cat.name}
+                          </h4>
+                        </div>
+                        <Link
+                          to={`/category/${cat.slug}`}
+                          onClick={closeDropdown}
+                          className="text-[11px] font-medium text-[#8B263E] hover:underline inline-flex items-center gap-1 transition-colors"
+                        >
+                          View All
+                          <ArrowRight size={11} />
+                        </Link>
+                      </div>
+
+                      {/* Subcategories List */}
+                      {hasSubcategories ? (
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-semibold tracking-wider text-[#8a7f72] uppercase mb-1.5 px-2 font-serif">
+                            Subcategories
+                          </p>
+                          <div className="max-h-64 overflow-y-auto pr-1">
+                            {subcategories.map((sub) => (
+                              <Link
+                                key={sub.id || sub.slug}
+                                to={`/category/${cat.slug}?subcategory=${sub.slug}`}
+                                onClick={closeDropdown}
+                                className="flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-[#3b362e] hover:bg-[#fbf7f0] hover:text-[#8B263E] transition-all group"
+                              >
+                                <span className="tracking-wide group-hover:translate-x-0.5 transition-transform">
+                                  {sub.name}
+                                </span>
+                                <ArrowRight
+                                  size={12}
+                                  className="opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-[#8B263E]"
+                                />
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="py-3 px-1 text-center">
+                          <p className="text-xs text-[#716b62] mb-3">
+                            Discover handcrafted {cat.name.toLowerCase()} in pure 925 sterling silver.
+                          </p>
+                          <Link
+                            to={`/category/${cat.slug}`}
+                            onClick={closeDropdown}
+                            className="inline-block w-full py-1.5 px-3 text-center text-xs font-semibold text-[#8B263E] bg-[#fbf7f0] hover:bg-[#f6eee2] rounded-md transition-colors"
+                          >
+                            Explore {cat.name}
+                          </Link>
+                        </div>
+                      )}
+
+                      {/* Footer Hallmark Badge */}
+                      <div className="mt-3 pt-2.5 border-t border-[#f4eee4] flex items-center justify-between text-[10px] text-[#8a7f72]">
+                        <span className="inline-flex items-center gap-1">
+                          <ShieldCheck size={11} className="text-[#b99657]" />
+                          Pure 925 Sterling Silver
+                        </span>
+                        <span className="text-[#a49a8d] tracking-wider uppercase text-[9px]">
+                          Hallmarked
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* 4. COLLECTIONS (Stand-alone tab name, functionality to be added later) */}
+          <NavLink
+            to="/collections"
+            className={({ isActive }) => (isActive ? "active" : undefined)}
+            onClick={closeDropdown}
+          >
+            COLLECTIONS
+          </NavLink>
         </nav>
 
         {/* Header Actions */}
@@ -248,7 +285,7 @@ function SiteHeader() {
             <Search size={20} strokeWidth={1.6} />
           </button>
 
-          {/* Account / Login Action */}
+          {/* Account / Login Action: Shows Profile Icon when logged in, LOGIN / SIGN UP button when logged out */}
           {isAuthenticated ? (
             <div className="relative" ref={userMenuRef}>
               <button
@@ -302,11 +339,12 @@ function SiteHeader() {
           ) : (
             <Link
               to="/login"
-              className="header-action-btn"
-              aria-label="Sign In"
-              title="Sign In / Login"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-semibold tracking-wider text-[#1e1c19] hover:text-[#b99657] border border-[#dcd4c7] hover:border-[#b99657] rounded-full transition-all uppercase whitespace-nowrap bg-white/70 hover:bg-white shadow-2xs"
+              aria-label="Login or Sign Up"
+              title="Login / Sign Up"
             >
-              <User size={20} strokeWidth={1.6} />
+              <User size={13} className="text-[#b99657]" />
+              <span>LOGIN / SIGN UP</span>
             </Link>
           )}
 
@@ -396,6 +434,7 @@ function SiteHeader() {
             />
           </form>
 
+          {/* Mobile Links */}
           <NavLink
             to="/"
             end
@@ -405,69 +444,83 @@ function SiteHeader() {
             HOME
           </NavLink>
 
-          {/* Mobile Collections Accordion */}
-          <div>
-            <div className="flex items-center justify-between py-2 border-b border-[#f1eadf]">
-              <a
-                href="/#collections"
-                onClick={closeMobileMenu}
-                className="font-medium text-xs tracking-wider text-[#1e1c19] uppercase"
-              >
-                COLLECTIONS
-              </a>
-              <button
-                type="button"
-                onClick={() => setIsMobileCollectionsOpen((prev) => !prev)}
-                className="p-1 text-[#8a7f72]"
-                aria-label="Toggle collections menu"
-              >
-                <ChevronDown
-                  size={16}
-                  className={`transition-transform duration-200 ${
-                    isMobileCollectionsOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-            </div>
+          <NavLink
+            to="/category"
+            end
+            onClick={closeMobileMenu}
+            className={({ isActive }) => (isActive ? "active" : undefined)}
+          >
+            ALL JEWELLERY
+          </NavLink>
 
-            {isMobileCollectionsOpen && (
-              <div className="pl-3 py-2 space-y-3 bg-[#fdfbf7] border-l-2 border-[#b99657]/40 my-1">
-                {categories.map((cat) => (
-                  <div key={cat.id || cat.slug} className="space-y-1">
+          {/* Dynamic Categories in Mobile Drawer */}
+          {categories.map((cat) => {
+            const subcategories = cat.subcategories || [];
+            const isExpanded = expandedMobileCat === cat.slug;
+
+            return (
+              <div key={cat.id || cat.slug} className="border-b border-[#f1eadf] py-1">
+                <div className="flex items-center justify-between py-1.5">
+                  <Link
+                    to={`/category/${cat.slug}`}
+                    onClick={closeMobileMenu}
+                    className="font-medium text-xs tracking-wider text-[#1e1c19] uppercase"
+                  >
+                    {cat.name}
+                  </Link>
+                  {subcategories.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setExpandedMobileCat(isExpanded ? null : cat.slug)
+                      }
+                      className="p-1 text-[#8a7f72] cursor-pointer"
+                      aria-label={`Toggle ${cat.name} subcategories`}
+                    >
+                      <ChevronDown
+                        size={15}
+                        className={`transition-transform duration-200 ${
+                          isExpanded ? "rotate-180 text-[#b99657]" : ""
+                        }`}
+                      />
+                    </button>
+                  )}
+                </div>
+
+                {/* Subcategories Accordion */}
+                {isExpanded && subcategories.length > 0 && (
+                  <div className="pl-3 py-1.5 space-y-2 bg-[#fdfbf7] border-l-2 border-[#b99657]/40 my-1">
                     <Link
                       to={`/category/${cat.slug}`}
                       onClick={closeMobileMenu}
-                      className="block text-xs font-serif font-medium text-[#1e1c19] hover:text-[#b99657]"
+                      className="block text-xs font-semibold text-[#8B263E] hover:underline"
                     >
-                      {cat.name}
+                      View All {cat.name} &rarr;
                     </Link>
-                    {cat.subcategories && cat.subcategories.length > 0 && (
-                      <div className="pl-2 space-y-1">
-                        {cat.subcategories.map((sub) => (
-                          <Link
-                            key={sub.id || sub.slug}
-                            to={`/category/${cat.slug}?subcategory=${sub.slug}`}
-                            onClick={closeMobileMenu}
-                            className="block text-[11px] text-[#716b62] hover:text-[#b99657]"
-                          >
-                            {sub.name}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
+                    {subcategories.map((sub) => (
+                      <Link
+                        key={sub.id || sub.slug}
+                        to={`/category/${cat.slug}?subcategory=${sub.slug}`}
+                        onClick={closeMobileMenu}
+                        className="block text-[11px] text-[#716b62] hover:text-[#8B263E] py-0.5"
+                      >
+                        {sub.name}
+                      </Link>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-            )}
-          </div>
+            );
+          })}
 
-          <a href="/#story" onClick={closeMobileMenu}>
-            OUR STORY
-          </a>
-
-          <a href="/#contact" onClick={closeMobileMenu}>
-            CONTACT
-          </a>
+          {/* COLLECTIONS (plain tab name for now) */}
+          <NavLink
+            to="/collections"
+            onClick={closeMobileMenu}
+            className={({ isActive }) => (isActive ? "active" : undefined)}
+          >
+            COLLECTIONS
+          </NavLink>
 
           {/* Mobile Auth Section */}
           <div className="mt-4 pt-4 border-t border-[#e7dfd3] flex flex-col gap-2">
@@ -511,8 +564,8 @@ function SiteHeader() {
                   }`
                 }
               >
-                <User size={15} />
-                SIGN IN / LOGIN
+                <User size={15} className="text-[#b99657]" />
+                LOGIN / SIGN UP
               </NavLink>
             )}
           </div>

@@ -55,9 +55,11 @@ router.get(
   storefrontController.getFilterableAttributes
 );
 
-// Homepage CMS — Hero, Promotional Banners, Special Offers
+// Homepage CMS — Hero, Promotional Banners, Special Offers, Merchandising Products
 router.get("/hero", storefrontController.getHero);
 router.get("/banners", storefrontController.getBanners);
 router.get("/special-offers", storefrontController.getSpecialOffers);
+router.get("/merchandising", storefrontController.getHomepageMerchandising);
+router.get("/homepage/merchandising", storefrontController.getHomepageMerchandising);
 
 export default router;

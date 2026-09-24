@@ -77,6 +77,19 @@ export const createProductSchema = z.object({
   seoDescription: z.string().trim().optional().nullable(),
   status: productStatusEnum.default("DRAFT"),
   isFeatured: z.boolean().optional().default(false),
+  isBestSeller: z.boolean().optional().default(false),
+  isNewArrival: z.boolean().optional().default(false),
+  isTrending: z.boolean().optional().default(false),
+  displayPriority: z.coerce.number().int().optional().default(0),
+  newArrivalUntil: z
+    .union([z.string(), z.date()])
+    .optional()
+    .nullable()
+    .transform((val) => {
+      if (!val || val === "" || val === "null") return null;
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? null : d;
+    }),
   images: z.array(productImageItemSchema).optional().default([]),
   attributes: z
     .array(
@@ -128,6 +141,19 @@ export const updateProductSchema = z
     seoDescription: z.string().trim().optional().nullable(),
     status: productStatusEnum.optional(),
     isFeatured: z.boolean().optional(),
+    isBestSeller: z.boolean().optional(),
+    isNewArrival: z.boolean().optional(),
+    isTrending: z.boolean().optional(),
+    displayPriority: z.coerce.number().int().optional(),
+    newArrivalUntil: z
+      .union([z.string(), z.date()])
+      .optional()
+      .nullable()
+      .transform((val) => {
+        if (!val || val === "" || val === "null") return null;
+        const d = new Date(val);
+        return isNaN(d.getTime()) ? null : d;
+      }),
     images: z.array(productImageItemSchema).optional(),
     attributes: z
       .array(
@@ -172,6 +198,25 @@ export const productQuerySchema = z.object({
   collectionSlug: z.string().trim().optional(),
   tagId: z.string().trim().optional(),
   tagSlug: z.string().trim().optional(),
+  minPrice: z.coerce.number().min(0).optional(),
+  maxPrice: z.coerce.number().min(0).optional(),
+  isBestSeller: z.union([z.boolean(), z.string()]).optional().transform((val) => {
+    if (val === undefined) return undefined;
+    return val === true || val === "true" || val === "1";
+  }),
+  isNewArrival: z.union([z.boolean(), z.string()]).optional().transform((val) => {
+    if (val === undefined) return undefined;
+    return val === true || val === "true" || val === "1";
+  }),
+  isFeatured: z.union([z.boolean(), z.string()]).optional().transform((val) => {
+    if (val === undefined) return undefined;
+    return val === true || val === "true" || val === "1";
+  }),
+  isTrending: z.union([z.boolean(), z.string()]).optional().transform((val) => {
+    if (val === undefined) return undefined;
+    return val === true || val === "true" || val === "1";
+  }),
+  merchandising: z.string().trim().optional(),
   attributeValueIds: z
     .union([z.string(), z.array(z.string())])
     .optional()
@@ -181,7 +226,7 @@ export const productQuerySchema = z.object({
       return val.split(",").map((s) => s.trim()).filter(Boolean);
     }),
   sortBy: z
-    .enum(["name", "price", "stockQuantity", "createdAt", "updatedAt", "sku", "sortOrder"])
+    .enum(["name", "price", "stockQuantity", "createdAt", "updatedAt", "sku", "sortOrder", "displayPriority"])
     .optional()
     .default("createdAt"),
   sortOrder: z

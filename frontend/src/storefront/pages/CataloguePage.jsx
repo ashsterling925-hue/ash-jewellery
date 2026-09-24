@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useSearchParams, useLocation, Link } from "react-router-dom";
-import { Filter, X, ChevronDown, ChevronRight, SlidersHorizontal, ArrowLeft } from "lucide-react";
+import { Filter, X, ChevronDown, ChevronRight, SlidersHorizontal, ArrowLeft, Sparkles, ShieldCheck } from "lucide-react";
 import SiteLayout from "@/storefront/components/SiteLayout";
 import ProductCard from "@/storefront/components/ProductCard";
 import { storefrontApi } from "@/lib/api/storefrontApi";
@@ -12,6 +12,14 @@ const SORT_OPTIONS = [
   { label: "Name: A to Z", value: "name_asc", sortBy: "name", sortOrder: "asc" },
 ];
 
+const PRICE_FILTER_OPTIONS = [
+  { label: "Under ₹2,000", min: null, max: 2000 },
+  { label: "₹2,000 – ₹5,000", min: 2000, max: 5000 },
+  { label: "₹5,000 – ₹10,000", min: 5000, max: 10000 },
+  { label: "₹10,000 – ₹20,000", min: 10000, max: 20000 },
+  { label: "Above ₹20,000", min: 20000, max: null },
+];
+
 export default function CataloguePage({ forcedCategorySlug }) {
   const { categorySlug, subcategorySlug, collectionSlug } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -21,6 +29,9 @@ export default function CataloguePage({ forcedCategorySlug }) {
   const querySort = searchParams.get("sort") || "newest";
   const queryPage = parseInt(searchParams.get("page") || "1", 10);
   const activeSubcategorySlug = searchParams.get("subcategory") || subcategorySlug;
+  const queryMinPrice = searchParams.get("minPrice") || "";
+  const queryMaxPrice = searchParams.get("maxPrice") || "";
+
   const queryAttrs = useMemo(() => {
     const raw = searchParams.get("attrs") || searchParams.get("attributeValueIds") || "";
     return raw ? raw.split(",").map((s) => s.trim()).filter(Boolean) : [];
@@ -32,6 +43,8 @@ export default function CataloguePage({ forcedCategorySlug }) {
     description: "",
     eyebrow: "ASH JEWELLERY",
   });
+  const [categoryData, setCategoryData] = useState(null);
+  const [activeSubcatObj, setActiveSubcatObj] = useState(null);
 
   // State
   const [products, setProducts] = useState([]);
@@ -40,6 +53,7 @@ export default function CataloguePage({ forcedCategorySlug }) {
   const [loading, setLoading] = useState(true);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [expandedFilterIds, setExpandedFilterIds] = useState(new Set());
+  const [isPriceFilterExpanded, setIsPriceFilterExpanded] = useState(true);
 
   // Determine active context
   const activeCategorySlug = forcedCategorySlug || categorySlug;
@@ -53,15 +67,48 @@ export default function CataloguePage({ forcedCategorySlug }) {
         if (activeCategorySlug) {
           const res = await storefrontApi.getCategoryBySlug(activeCategorySlug);
           if (isMounted && res?.data) {
+            setCategoryData(res.data);
+
+            if (activeSubcategorySlug) {
+              let matchingSubcat = res.data.subcategories?.find(
+                (s) => s.slug === activeSubcategorySlug || s.id === activeSubcategorySlug
+              );
+
+              if (!matchingSubcat) {
+                try {
+                  const subRes = await storefrontApi.getSubcategoryBySlug(activeSubcategorySlug);
+                  if (subRes?.data) {
+                    matchingSubcat = subRes.data;
+                  }
+                } catch {
+                  // ignore
+                }
+              }
+
+              if (matchingSubcat) {
+                setActiveSubcatObj(matchingSubcat);
+                const hasCatInName = matchingSubcat.name.toLowerCase().includes(res.data.name.toLowerCase());
+                const displayName = hasCatInName ? matchingSubcat.name : `${matchingSubcat.name} ${res.data.name}`;
+                setContextData({
+                  title: displayName,
+                  description: matchingSubcat.description || `Handcrafted ${matchingSubcat.name} designs in pure 925 sterling silver under ${res.data.name}.`,
+                  eyebrow: `${res.data.name.toUpperCase()} / ${matchingSubcat.name.toUpperCase()}`,
+                });
+                return;
+              }
+            }
+
+            setActiveSubcatObj(null);
             setContextData({
               title: res.data.name,
               description: res.data.description || "Discover handcrafted silver designs created with precision and care.",
               eyebrow: "CATEGORY",
             });
           }
-        } else if (subcategorySlug) {
-          const res = await storefrontApi.getSubcategoryBySlug(subcategorySlug);
+        } else if (activeSubcategorySlug) {
+          const res = await storefrontApi.getSubcategoryBySlug(activeSubcategorySlug);
           if (isMounted && res?.data) {
+            setActiveSubcatObj(res.data);
             setContextData({
               title: res.data.name,
               description: res.data.description || "Handcrafted jewellery for your timeless collection.",
@@ -106,7 +153,7 @@ export default function CataloguePage({ forcedCategorySlug }) {
     return () => {
       isMounted = false;
     };
-  }, [activeCategorySlug, subcategorySlug, collectionSlug, isSearchPage, querySearch]);
+  }, [activeCategorySlug, subcategorySlug, activeSubcategorySlug, collectionSlug, isSearchPage, querySearch]);
 
   // Load Dynamic Filterable Attributes
   useEffect(() => {
@@ -135,42 +182,49 @@ export default function CataloguePage({ forcedCategorySlug }) {
   }, []);
 
   // Fetch Products based on URL query state
-  const loadProducts = useCallback(async () => {
-    setLoading(true);
-    try {
-      const selectedSort = SORT_OPTIONS.find((s) => s.value === querySort) || SORT_OPTIONS[0];
-
-      const params = {
-        page: queryPage,
-        limit: 12,
-        sortBy: selectedSort.sortBy,
-        sortOrder: selectedSort.sortOrder,
-      };
-
-      if (activeCategorySlug) params.categorySlug = activeCategorySlug;
-      if (activeSubcategorySlug) params.subcategorySlug = activeSubcategorySlug;
-      if (collectionSlug) params.collectionSlug = collectionSlug;
-      if (querySearch) params.search = querySearch;
-      if (queryAttrs.length > 0) params.attributeValueIds = queryAttrs.join(",");
-
-      const response = await storefrontApi.getProducts(params);
-      if (response?.data) {
-        setProducts(response.data);
-        if (response.pagination) {
-          setPagination(response.pagination);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to load products:", err);
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [activeCategorySlug, activeSubcategorySlug, collectionSlug, querySearch, querySort, queryPage, queryAttrs]);
-
   useEffect(() => {
-    loadProducts();
-  }, [loadProducts]);
+    let isMounted = true;
+    async function fetchProducts() {
+      setLoading(true);
+      try {
+        const selectedSort = SORT_OPTIONS.find((s) => s.value === querySort) || SORT_OPTIONS[0];
+
+        const params = {
+          page: queryPage,
+          limit: 12,
+          sortBy: selectedSort.sortBy,
+          sortOrder: selectedSort.sortOrder,
+        };
+
+        if (activeCategorySlug) params.categorySlug = activeCategorySlug;
+        if (activeSubcategorySlug) params.subcategorySlug = activeSubcategorySlug;
+        if (collectionSlug) params.collectionSlug = collectionSlug;
+        if (querySearch) params.search = querySearch;
+        if (queryMinPrice) params.minPrice = queryMinPrice;
+        if (queryMaxPrice) params.maxPrice = queryMaxPrice;
+        if (queryAttrs.length > 0) params.attributeValueIds = queryAttrs.join(",");
+
+        const response = await storefrontApi.getProducts(params);
+        if (isMounted && response?.data) {
+          setProducts(response.data);
+          if (response.pagination) {
+            setPagination(response.pagination);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load products:", err);
+        if (isMounted) setProducts([]);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    fetchProducts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeCategorySlug, activeSubcategorySlug, collectionSlug, querySearch, querySort, queryPage, queryAttrs, queryMinPrice, queryMaxPrice]);
 
   // URL State Updates
   const updateUrlParam = (updater) => {
@@ -198,6 +252,30 @@ export default function CataloguePage({ forcedCategorySlug }) {
     });
   };
 
+  const handleSetPriceRange = (min, max) => {
+    updateUrlParam((params) => {
+      if (min !== null && min !== undefined && min !== "") {
+        params.set("minPrice", String(min));
+      } else {
+        params.delete("minPrice");
+      }
+      if (max !== null && max !== undefined && max !== "") {
+        params.set("maxPrice", String(max));
+      } else {
+        params.delete("maxPrice");
+      }
+      params.set("page", "1");
+    });
+  };
+
+  const handleClearPriceFilter = () => {
+    updateUrlParam((params) => {
+      params.delete("minPrice");
+      params.delete("maxPrice");
+      params.set("page", "1");
+    });
+  };
+
   const handleSortChange = (newSort) => {
     updateUrlParam((params) => {
       params.set("sort", newSort);
@@ -212,10 +290,24 @@ export default function CataloguePage({ forcedCategorySlug }) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleSelectSubcategory = (subSlug) => {
+    updateUrlParam((params) => {
+      if (subSlug) {
+        params.set("subcategory", subSlug);
+      } else {
+        params.delete("subcategory");
+      }
+      params.set("page", "1");
+    });
+  };
+
   const handleClearAllFilters = () => {
     updateUrlParam((params) => {
       params.delete("attrs");
       params.delete("attributeValueIds");
+      params.delete("minPrice");
+      params.delete("maxPrice");
+      params.delete("subcategory");
       params.set("page", "1");
     });
   };
@@ -232,91 +324,258 @@ export default function CataloguePage({ forcedCategorySlug }) {
     });
   };
 
+  const hasPriceFilter = Boolean(queryMinPrice || queryMaxPrice);
+  const priceFilterLabel = queryMinPrice && queryMaxPrice
+    ? `₹${Number(queryMinPrice).toLocaleString("en-IN")} – ₹${Number(queryMaxPrice).toLocaleString("en-IN")}`
+    : queryMinPrice
+    ? `Above ₹${Number(queryMinPrice).toLocaleString("en-IN")}`
+    : queryMaxPrice
+    ? `Under ₹${Number(queryMaxPrice).toLocaleString("en-IN")}`
+    : null;
+
   return (
     <SiteLayout>
       <div className="bg-[#fbf8f2] min-h-screen py-8">
         <div className="container">
-          {/* Breadcrumb / Back Link */}
-          <div className="mb-6">
-            <Link
-              to="/"
-              className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.12em] text-[#716b62] hover:text-[#1e1c19] uppercase"
-            >
-              <ArrowLeft size={13} /> Back to Home
-            </Link>
+          {/* Breadcrumb & Assurance Strip */}
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 text-[11px] text-[#716b62]">
+            <div className="flex items-center gap-2">
+              <Link
+                to="/"
+                className="inline-flex items-center gap-1.5 font-medium tracking-wider text-[#716b62] hover:text-[#b99657] transition-colors uppercase"
+              >
+                <ArrowLeft size={13} />
+                Home
+              </Link>
+              <span className="text-[#d5cbbe]">/</span>
+              {categoryData ? (
+                <>
+                  <Link
+                    to={`/category/${categoryData.slug}`}
+                    onClick={() => handleSelectSubcategory(null)}
+                    className={`font-medium tracking-wider uppercase transition-colors ${
+                      !activeSubcategorySlug
+                        ? "text-[#1e1c19] font-semibold"
+                        : "text-[#716b62] hover:text-[#b99657]"
+                    }`}
+                  >
+                    {categoryData.name}
+                  </Link>
+                  {activeSubcategorySlug && (
+                    <>
+                      <span className="text-[#d5cbbe]">/</span>
+                      <span className="font-semibold text-[#8B263E] uppercase tracking-wider">
+                        {activeSubcatObj?.name || activeSubcategorySlug}
+                      </span>
+                    </>
+                  )}
+                </>
+              ) : (
+                <span className="font-semibold text-[#1e1c19] uppercase tracking-wider">
+                  Catalogue
+                </span>
+              )}
+            </div>
+
+            {/* Assurance Hallmark */}
+            <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f4ece0]/60 border border-[#e8dfd3] text-[10px] text-[#8a7a67] tracking-wider uppercase font-medium">
+              <ShieldCheck size={12} className="text-[#b99657]" />
+              <span>Certified 925 Sterling Silver</span>
+            </div>
           </div>
 
-          {/* Heading Banner */}
-          <div className="mb-10 text-center">
-            <p className="text-[10px] font-semibold tracking-[0.25em] text-[#b99657] uppercase">
-              {contextData.eyebrow}
-            </p>
-            <h1 className="mt-2 font-serif text-3xl font-medium tracking-wide text-[#1e1c19] sm:text-4xl">
+          {/* Luxury Showcase Header Banner */}
+          <div className="relative mb-8 overflow-hidden rounded-2xl border border-[#e8ded2] bg-gradient-to-b from-[#fffdfa] via-[#fbf8f2] to-[#f8f3ea] px-6 py-8 sm:px-12 sm:py-12 text-center shadow-[0_4px_24px_rgba(0,0,0,0.03)]">
+            {/* Subtle decorative glow corner orbs */}
+            <div className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-[#b99657]/10 blur-2xl" />
+            <div className="pointer-events-none absolute -right-12 -bottom-12 h-44 w-44 rounded-full bg-[#8B263E]/8 blur-2xl" />
+
+            {/* Eyebrow badge */}
+            <div className="relative inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#f4ece0] border border-[#e2d5c3] text-[10px] font-semibold tracking-[0.25em] text-[#97753e] uppercase mb-3.5 shadow-2xs font-sans">
+              <Sparkles size={11} className="text-[#b99657]" />
+              <span>{contextData.eyebrow}</span>
+            </div>
+
+            {/* Grand Title */}
+            <h1 className="relative font-serif text-3xl sm:text-4xl md:text-5xl font-normal tracking-wide text-[#1c1a17] leading-tight max-w-3xl mx-auto">
               {contextData.title}
             </h1>
+
+            {/* Description */}
             {contextData.description && (
-              <p className="mx-auto mt-3 max-w-xl text-xs leading-relaxed text-[#716b62]">
+              <p className="relative mx-auto mt-3 max-w-xl text-xs sm:text-sm leading-relaxed text-[#685f54] font-light">
                 {contextData.description}
               </p>
             )}
-            <div className="mx-auto mt-4 h-[2px] w-10 bg-[#b99657]" />
+
+            {/* Jewel Insignia Divider */}
+            <div className="relative flex items-center justify-center gap-3 my-5">
+              <div className="h-px w-14 bg-gradient-to-r from-transparent to-[#c5a265]" />
+              <div className="w-1.5 h-1.5 rotate-45 bg-[#c5a265]" />
+              <div className="h-px w-14 bg-gradient-to-l from-transparent to-[#c5a265]" />
+            </div>
+
+            {/* Subcategory Pills Strip */}
+            {categoryData?.subcategories?.length > 0 && (
+              <div className="relative mt-2 inline-flex flex-wrap items-center justify-center gap-2 p-1.5 bg-white/70 backdrop-blur-xs rounded-full border border-[#e8ded2] shadow-2xs max-w-full">
+                {/* All Category Pill */}
+                <button
+                  type="button"
+                  onClick={() => handleSelectSubcategory(null)}
+                  className={`group relative cursor-pointer px-4 sm:px-5 py-1.5 sm:py-2 text-xs font-serif rounded-full transition-all duration-200 border flex items-center gap-1.5 ${
+                    !activeSubcategorySlug
+                      ? "bg-[#7e1c2e] text-white border-[#7e1c2e] shadow-md shadow-[#7e1c2e]/20 font-semibold"
+                      : "bg-transparent text-[#4a4238] border-transparent hover:border-[#dfd5c7] hover:text-[#1c1a17] hover:bg-white/90"
+                  }`}
+                >
+                  {!activeSubcategorySlug && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#f5d799]" />
+                  )}
+                  <span>All {categoryData.name}</span>
+                </button>
+
+                {/* Individual Subcategories */}
+                {categoryData.subcategories.map((sub) => {
+                  const isSelected =
+                    activeSubcategorySlug === sub.slug || activeSubcategorySlug === sub.id;
+                  return (
+                    <button
+                      key={sub.id}
+                      type="button"
+                      onClick={() => handleSelectSubcategory(sub.slug)}
+                      className={`group relative cursor-pointer px-4 sm:px-5 py-1.5 sm:py-2 text-xs font-serif rounded-full transition-all duration-200 border flex items-center gap-1.5 ${
+                        isSelected
+                          ? "bg-[#7e1c2e] text-white border-[#7e1c2e] shadow-md shadow-[#7e1c2e]/20 font-semibold"
+                          : "bg-transparent text-[#4a4238] border-transparent hover:border-[#dfd5c7] hover:text-[#1c1a17] hover:bg-white/90"
+                      }`}
+                    >
+                      {isSelected && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#f5d799]" />
+                      )}
+                      <span>{sub.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          {/* Top Bar: Count, Mobile Filter Trigger, Sort Dropdown */}
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-[#e7dfd3] pb-4">
+          {/* Top Utility Bar: Count, Mobile Filter Trigger, Sort Dropdown */}
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[#e8ded2] bg-[#fffdf9] px-5 py-3 shadow-2xs">
             <div className="flex items-center gap-3">
+              {/* Mobile Filter Trigger */}
               <button
                 type="button"
                 onClick={() => setIsMobileFilterOpen(true)}
-                className="flex items-center gap-2 border border-[#d9cdbd] bg-[#fffdf9] px-3.5 py-1.5 text-xs font-medium text-[#1e1c19] lg:hidden"
+                className="flex items-center gap-2 rounded-lg border border-[#d9cdbd] bg-[#fbf8f2] px-3.5 py-1.5 text-xs font-medium text-[#1e1c19] hover:border-[#b99657] transition-colors lg:hidden cursor-pointer"
               >
-                <SlidersHorizontal size={14} />
-                Filters
+                <SlidersHorizontal size={14} className="text-[#8B263E]" />
+                <span>Filters</span>
                 {queryAttrs.length > 0 && (
-                  <span className="rounded-full bg-[#b99657] px-1.5 py-0.2 text-[10px] font-bold text-white">
+                  <span className="rounded-full bg-[#8B263E] px-1.5 py-0.2 text-[10px] font-bold text-white">
                     {queryAttrs.length}
                   </span>
                 )}
               </button>
 
-              <span className="text-xs text-[#716b62]">
-                {loading
-                  ? "Loading products..."
-                  : `Showing ${products.length} of ${pagination.total} ${
-                      pagination.total === 1 ? "piece" : "pieces"
-                    }`}
-              </span>
-
-              {queryAttrs.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleClearAllFilters}
-                  className="hidden text-xs font-semibold text-[#b99657] hover:underline sm:inline-block"
-                >
-                  Clear Filters ({queryAttrs.length})
-                </button>
-              )}
+              {/* Count Indicator */}
+              <div className="flex items-center gap-2 text-xs text-[#5f574d]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#b99657]" />
+                <span>
+                  {loading ? (
+                    "Loading pieces..."
+                  ) : (
+                    <>
+                      Showing{" "}
+                      <span className="font-semibold text-[#1e1c19]">
+                        {products.length}
+                      </span>{" "}
+                      of{" "}
+                      <span className="font-semibold text-[#1e1c19]">
+                        {pagination.total}
+                      </span>{" "}
+                      {pagination.total === 1 ? "piece" : "pieces"}
+                    </>
+                  )}
+                </span>
+              </div>
             </div>
 
-            {/* Sort Select */}
-            <div className="flex items-center gap-2">
-              <label htmlFor="catalogue-sort" className="text-xs text-[#716b62]">
+            {/* Sort Select with Custom Styling */}
+            <div className="flex items-center gap-2.5">
+              <label htmlFor="catalogue-sort" className="text-xs font-medium text-[#716b62]">
                 Sort by:
               </label>
-              <select
-                id="catalogue-sort"
-                value={querySort}
-                onChange={(e) => handleSortChange(e.target.value)}
-                className="border border-[#d9cdbd] bg-[#fffdf9] px-3 py-1.5 text-xs text-[#1e1c19] outline-none transition-colors focus:border-[#b99657]"
-              >
-                {SORT_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  id="catalogue-sort"
+                  value={querySort}
+                  onChange={(e) => handleSortChange(e.target.value)}
+                  className="appearance-none rounded-lg border border-[#d9cdbd] bg-white pl-3.5 pr-8 py-1.5 text-xs font-medium text-[#1e1c19] outline-none transition-all hover:border-[#b99657] focus:border-[#8B263E] focus:ring-1 focus:ring-[#8B263E]/20 cursor-pointer shadow-2xs"
+                >
+                  {SORT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={13}
+                  className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8a7f72]"
+                />
+              </div>
             </div>
           </div>
+
+          {/* Active Filter Chips Bar */}
+          {(hasPriceFilter || Boolean(activeSubcategorySlug) || queryAttrs.length > 0) && (
+            <div className="mb-6 flex flex-wrap items-center gap-2.5 rounded-xl border border-[#eedfd8] bg-[#fdfaf8] px-4 py-2.5">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#8a7f72] mr-1">
+                Active Filters:
+              </span>
+
+              {activeSubcategorySlug && (
+                <span className="inline-flex items-center gap-2 rounded-full bg-white border border-[#e8c8c2] pl-3 pr-2 py-1 text-xs text-[#7e1c2e] font-medium shadow-2xs">
+                  <span>
+                    Subcategory:{" "}
+                    <strong>{activeSubcatObj?.name || activeSubcategorySlug}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleSelectSubcategory(null)}
+                    className="w-4 h-4 rounded-full bg-[#f9e9e6] hover:bg-[#7e1c2e] hover:text-white flex items-center justify-center text-[#7e1c2e] transition-colors cursor-pointer"
+                    aria-label="Remove subcategory filter"
+                  >
+                    <X size={10} />
+                  </button>
+                </span>
+              )}
+
+              {hasPriceFilter && (
+                <span className="inline-flex items-center gap-2 rounded-full bg-white border border-[#dfd4c5] pl-3 pr-2 py-1 text-xs text-[#1e1c19] font-medium shadow-2xs">
+                  <span>
+                    Price: <strong>{priceFilterLabel}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleClearPriceFilter}
+                    className="w-4 h-4 rounded-full bg-[#f4ede3] hover:bg-[#1e1c19] hover:text-white flex items-center justify-center text-[#716b62] transition-colors cursor-pointer"
+                    aria-label="Remove price filter"
+                  >
+                    <X size={10} />
+                  </button>
+                </span>
+              )}
+
+              <button
+                type="button"
+                onClick={handleClearAllFilters}
+                className="text-xs font-semibold text-[#7e1c2e] hover:underline ml-auto cursor-pointer flex items-center gap-1 transition-colors"
+              >
+                <span>Clear All</span>
+              </button>
+            </div>
+          )}
 
           {/* Main Layout: Filter Sidebar + Product Grid */}
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
@@ -325,16 +584,64 @@ export default function CataloguePage({ forcedCategorySlug }) {
               <div className="sticky top-24 space-y-6 rounded-none border border-[#e7dfd3] bg-[#fffdf9] p-5">
                 <div className="flex items-center justify-between border-b border-[#e7dfd3] pb-3">
                   <h2 className="flex items-center gap-2 text-xs font-bold tracking-widest text-[#1e1c19] uppercase">
-                    <Filter size={14} className="text-[#b99657]" /> Filter By
+                    <Filter size={14} className="text-[#8B263E]" /> Filter By
                   </h2>
-                  {queryAttrs.length > 0 && (
+                  {(hasPriceFilter || queryAttrs.length > 0) && (
                     <button
                       type="button"
                       onClick={handleClearAllFilters}
-                      className="text-[11px] font-medium text-[#b99657] hover:underline"
+                      className="text-[11px] font-medium text-[#8B263E] hover:underline cursor-pointer"
                     >
                       Clear All
                     </button>
+                  )}
+                </div>
+
+                {/* Price Range Filter Section */}
+                <div className="border-b border-[#f1eadf] pb-4">
+                  <button
+                    type="button"
+                    onClick={() => setIsPriceFilterExpanded((prev) => !prev)}
+                    className="flex w-full items-center justify-between py-1 text-left text-xs font-semibold tracking-wider text-[#1e1c19] uppercase cursor-pointer"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      Price
+                      {hasPriceFilter && (
+                        <span className="text-[10px] font-normal text-[#8B263E]">(1)</span>
+                      )}
+                    </span>
+                    {isPriceFilterExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                  </button>
+
+                  {isPriceFilterExpanded && (
+                    <div className="mt-2.5 space-y-1.5">
+                      {PRICE_FILTER_OPTIONS.map((opt) => {
+                        const isSelected =
+                          String(opt.min || "") === String(queryMinPrice || "") &&
+                          String(opt.max || "") === String(queryMaxPrice || "");
+                        return (
+                          <button
+                            key={opt.label}
+                            type="button"
+                            onClick={() => {
+                              if (isSelected) {
+                                handleClearPriceFilter();
+                              } else {
+                                handleSetPriceRange(opt.min, opt.max);
+                              }
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs text-left transition-colors cursor-pointer ${
+                              isSelected
+                                ? "bg-[#fbeee8] text-[#8B263E] font-medium"
+                                : "text-[#716b62] hover:bg-[#f6eee2] hover:text-[#1e1c19]"
+                            }`}
+                          >
+                            <span>{opt.label}</span>
+                            {isSelected && <span className="text-[10px] text-[#8B263E]">✓</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
 
@@ -356,7 +663,7 @@ export default function CataloguePage({ forcedCategorySlug }) {
                           <span className="flex items-center gap-1.5">
                             {attr.name}
                             {activeCount > 0 && (
-                              <span className="text-[10px] font-normal text-[#b99657]">
+                              <span className="text-[10px] font-normal text-[#8B263E]">
                                 ({activeCount})
                               </span>
                             )}
@@ -377,7 +684,7 @@ export default function CataloguePage({ forcedCategorySlug }) {
                                     type="checkbox"
                                     checked={checked}
                                     onChange={() => handleToggleAttributeValue(val.id)}
-                                    className="h-3.5 w-3.5 accent-[#b99657]"
+                                    className="h-3.5 w-3.5 accent-[#8B263E]"
                                   />
                                   <span>{val.value}</span>
                                 </label>
@@ -419,6 +726,41 @@ export default function CataloguePage({ forcedCategorySlug }) {
                   </div>
 
                   <div className="flex-1 overflow-y-auto py-4 space-y-6">
+                    {/* Mobile Price Filters */}
+                    <div className="border-b border-[#f1eadf] pb-4">
+                      <p className="mb-2 text-xs font-semibold tracking-wider text-[#1e1c19] uppercase">
+                        Price
+                      </p>
+                      <div className="space-y-1.5">
+                        {PRICE_FILTER_OPTIONS.map((opt) => {
+                          const isSelected =
+                            String(opt.min || "") === String(queryMinPrice || "") &&
+                            String(opt.max || "") === String(queryMaxPrice || "");
+                          return (
+                            <button
+                              key={opt.label}
+                              type="button"
+                              onClick={() => {
+                                if (isSelected) {
+                                  handleClearPriceFilter();
+                                } else {
+                                  handleSetPriceRange(opt.min, opt.max);
+                                }
+                              }}
+                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs text-left transition-colors cursor-pointer ${
+                                isSelected
+                                  ? "bg-[#fbeee8] text-[#8B263E] font-medium"
+                                  : "text-[#716b62] hover:bg-[#f6eee2] hover:text-[#1e1c19]"
+                              }`}
+                            >
+                              <span>{opt.label}</span>
+                              {isSelected && <span className="text-[10px] text-[#8B263E]">✓</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
                     {filters.map((attr) => (
                       <div key={attr.id} className="border-b border-[#f1eadf] pb-4">
                         <p className="mb-2 text-xs font-semibold tracking-wider text-[#1e1c19] uppercase">
@@ -436,7 +778,7 @@ export default function CataloguePage({ forcedCategorySlug }) {
                                   type="checkbox"
                                   checked={checked}
                                   onChange={() => handleToggleAttributeValue(val.id)}
-                                  className="h-3.5 w-3.5 accent-[#b99657]"
+                                  className="h-3.5 w-3.5 accent-[#8B263E]"
                                 />
                                 <span>{val.value}</span>
                               </label>

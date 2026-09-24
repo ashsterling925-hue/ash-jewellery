@@ -167,6 +167,11 @@ model Product {
   finish            String?
   status            ProductStatus           @default(DRAFT)
   isFeatured        Boolean                 @default(false)
+  isBestSeller      Boolean                 @default(false)
+  isNewArrival      Boolean                 @default(false)
+  isTrending        Boolean                 @default(false)
+  displayPriority   Int                     @default(0)
+  newArrivalUntil   DateTime?
   sortOrder         Int                     @default(0)
   seoTitle          String?
   seoDescription    String?
@@ -184,6 +189,11 @@ model Product {
   @@index([slug])
   @@index([sku])
   @@index([status])
+  @@index([isFeatured])
+  @@index([isBestSeller])
+  @@index([isNewArrival])
+  @@index([isTrending])
+  @@index([displayPriority])
   @@index([categoryId])
   @@index([subcategoryId])
   @@index([collectionId])

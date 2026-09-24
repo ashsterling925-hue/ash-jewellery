@@ -18,6 +18,7 @@ const ALLOWED_SORT_FIELDS = [
   "updatedAt",
   "sku",
   "sortOrder",
+  "displayPriority",
 ];
 
 /**
@@ -278,31 +279,29 @@ export const productService = {
       whereConditions.push({ stockStatus: query.stockStatus });
     }
 
-    // Category filter by ID
+    // Category filter by ID or Slug
     if (query.categoryId && query.categoryId !== "All") {
       whereConditions.push({ categoryId: query.categoryId });
-    }
-
-    // Category filter by Slug
-    if (query.categorySlug && query.categorySlug !== "All") {
+    } else if (query.categorySlug && query.categorySlug !== "All") {
+      const catVal = query.categorySlug.trim();
       whereConditions.push({
-        category: {
-          slug: query.categorySlug.trim(),
-        },
+        OR: [
+          { category: { slug: { equals: catVal, mode: "insensitive" } } },
+          { categoryId: catVal },
+        ],
       });
     }
 
-    // Subcategory filter by ID
+    // Subcategory filter by ID or Slug
     if (query.subcategoryId && query.subcategoryId !== "All") {
       whereConditions.push({ subcategoryId: query.subcategoryId });
-    }
-
-    // Subcategory filter by Slug
-    if (query.subcategorySlug && query.subcategorySlug !== "All") {
+    } else if (query.subcategorySlug && query.subcategorySlug !== "All") {
+      const subVal = query.subcategorySlug.trim();
       whereConditions.push({
-        subcategory: {
-          slug: query.subcategorySlug.trim(),
-        },
+        OR: [
+          { subcategory: { slug: { equals: subVal, mode: "insensitive" } } },
+          { subcategoryId: subVal },
+        ],
       });
     }
 
@@ -318,6 +317,47 @@ export const productService = {
           slug: query.collectionSlug.trim(),
         },
       });
+    }
+
+    // Price range filters
+    if (query.minPrice !== undefined && query.minPrice !== "" && !isNaN(Number(query.minPrice))) {
+      whereConditions.push({
+        price: {
+          gte: Number(query.minPrice),
+        },
+      });
+    }
+    if (query.maxPrice !== undefined && query.maxPrice !== "" && !isNaN(Number(query.maxPrice))) {
+      whereConditions.push({
+        price: {
+          lte: Number(query.maxPrice),
+        },
+      });
+    }
+
+    // Merchandising filters (Best Seller, New Arrival, Featured, Trending)
+    const merch = (query.merchandising || "").toLowerCase();
+
+    if (query.isBestSeller === true || merch === "bestseller" || merch === "best-seller" || merch === "best_seller") {
+      whereConditions.push({ isBestSeller: true });
+    }
+
+    if (query.isNewArrival === true || merch === "newarrival" || merch === "new-arrival" || merch === "new_arrival") {
+      whereConditions.push({
+        isNewArrival: true,
+        OR: [
+          { newArrivalUntil: null },
+          { newArrivalUntil: { gte: new Date() } },
+        ],
+      });
+    }
+
+    if (query.isFeatured === true || merch === "featured") {
+      whereConditions.push({ isFeatured: true });
+    }
+
+    if (query.isTrending === true || merch === "trending") {
+      whereConditions.push({ isTrending: true });
     }
 
     // Dynamic Attribute filter: attributeValueIds
@@ -534,6 +574,11 @@ export const productService = {
       seoDescription: (payload.metaDescription || payload.seoDescription)?.trim() || null,
       status: payload.status || "DRAFT",
       isFeatured: Boolean(payload.isFeatured),
+      isBestSeller: Boolean(payload.isBestSeller),
+      isNewArrival: Boolean(payload.isNewArrival),
+      isTrending: Boolean(payload.isTrending),
+      displayPriority: typeof payload.displayPriority === "number" ? payload.displayPriority : Number(payload.displayPriority) || 0,
+      newArrivalUntil: payload.newArrivalUntil ? new Date(payload.newArrivalUntil) : null,
     };
 
     const created = await productRepository.createWithImages(
@@ -702,6 +747,21 @@ export const productService = {
     if (payload.isFeatured !== undefined) {
       updateData.isFeatured = Boolean(payload.isFeatured);
     }
+    if (payload.isBestSeller !== undefined) {
+      updateData.isBestSeller = Boolean(payload.isBestSeller);
+    }
+    if (payload.isNewArrival !== undefined) {
+      updateData.isNewArrival = Boolean(payload.isNewArrival);
+    }
+    if (payload.isTrending !== undefined) {
+      updateData.isTrending = Boolean(payload.isTrending);
+    }
+    if (payload.displayPriority !== undefined) {
+      updateData.displayPriority = Number(payload.displayPriority) || 0;
+    }
+    if (payload.newArrivalUntil !== undefined) {
+      updateData.newArrivalUntil = payload.newArrivalUntil ? new Date(payload.newArrivalUntil) : null;
+    }
 
     // Validate dynamic attribute assignments if provided
     let attributeAssignments;
@@ -746,6 +806,65 @@ export const productService = {
     return {
       message: `Product "${product.name}" (SKU: ${product.sku}) was successfully deleted.`,
       product: { id, name: product.name, sku: product.sku },
+    };
+  },
+
+  /**
+   * Fetch dynamic products for homepage merchandising sections (Best Sellers, New Arrivals, Featured, Trending)
+   */
+  async getHomepageMerchandising(limit = 8) {
+    const take = Math.min(Math.max(Number(limit) || 8, 1), 24);
+    const now = new Date();
+
+    const orderBy = [
+      { displayPriority: "desc" },
+      { createdAt: "desc" },
+    ];
+
+    const [bestSellers, newArrivals, featured, trending] = await Promise.all([
+      productRepository.findMany({
+        where: {
+          status: "PUBLISHED",
+          isBestSeller: true,
+        },
+        orderBy,
+        take,
+      }),
+      productRepository.findMany({
+        where: {
+          status: "PUBLISHED",
+          isNewArrival: true,
+          OR: [
+            { newArrivalUntil: null },
+            { newArrivalUntil: { gte: now } },
+          ],
+        },
+        orderBy,
+        take,
+      }),
+      productRepository.findMany({
+        where: {
+          status: "PUBLISHED",
+          isFeatured: true,
+        },
+        orderBy,
+        take,
+      }),
+      productRepository.findMany({
+        where: {
+          status: "PUBLISHED",
+          isTrending: true,
+        },
+        orderBy,
+        take,
+      }),
+    ]);
+
+    return {
+      bestSellers: bestSellers.map(formatProductResponse),
+      newArrivals: newArrivals.map(formatProductResponse),
+      featured: featured.map(formatProductResponse),
+      trending: trending.map(formatProductResponse),
     };
   },
 };

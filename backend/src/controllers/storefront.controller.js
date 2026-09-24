@@ -58,6 +58,44 @@ export const storefrontController = {
   },
 
   /**
+   * GET /api/v1/storefront/merchandising
+   * Dynamic homepage product sections (Best Sellers, New Arrivals, Featured, Trending)
+   */
+  async getHomepageMerchandising(req, res, next) {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit, 10) : 8;
+      const data = await productService.getHomepageMerchandising(limit);
+
+      // Support optional section filter if client requests a single section
+      if (req.query.section) {
+        const sec = req.query.section.toLowerCase();
+        let sectionData = [];
+        if (sec === "bestsellers" || sec === "best-sellers" || sec === "bestseller") {
+          sectionData = data.bestSellers;
+        } else if (sec === "newarrivals" || sec === "new-arrivals" || sec === "newarrival") {
+          sectionData = data.newArrivals;
+        } else if (sec === "featured") {
+          sectionData = data.featured;
+        } else if (sec === "trending") {
+          sectionData = data.trending;
+        }
+
+        return sendSuccess(res, {
+          message: `Homepage ${req.query.section} products fetched successfully`,
+          data: sectionData,
+        });
+      }
+
+      return sendSuccess(res, {
+        message: "Homepage merchandising products fetched successfully",
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  /**
    * GET /api/v1/storefront/categories
    * List active categories
    */
@@ -228,6 +266,53 @@ export const storefrontController = {
       return sendSuccess(res, {
         message: "Storefront special offers fetched successfully",
         data: offers,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  /**
+   * GET /api/v1/storefront/merchandising
+   * GET /api/v1/storefront/homepage/merchandising
+   * Get dynamic homepage merchandising sections (Best Sellers, New Arrivals, Featured, Trending)
+   */
+  async getHomepageMerchandising(req, res, next) {
+    try {
+      const limit = parseInt(req.query.limit, 10) || 8;
+      const data = await productService.getHomepageMerchandising(limit);
+
+      const section = req.query.section?.toLowerCase();
+      if (section) {
+        if (section === "bestsellers" || section === "best-sellers") {
+          return sendSuccess(res, {
+            message: "Best sellers fetched successfully",
+            data: data.bestSellers,
+          });
+        }
+        if (section === "new-arrivals" || section === "newarrivals") {
+          return sendSuccess(res, {
+            message: "New arrivals fetched successfully",
+            data: data.newArrivals,
+          });
+        }
+        if (section === "featured") {
+          return sendSuccess(res, {
+            message: "Featured products fetched successfully",
+            data: data.featured,
+          });
+        }
+        if (section === "trending") {
+          return sendSuccess(res, {
+            message: "Trending products fetched successfully",
+            data: data.trending,
+          });
+        }
+      }
+
+      return sendSuccess(res, {
+        message: "Homepage merchandising products fetched successfully",
+        data,
       });
     } catch (error) {
       next(error);

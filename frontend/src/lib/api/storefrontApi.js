@@ -83,6 +83,14 @@ export const storefrontApi = {
   async getSpecialOffers() {
     return api.get("/storefront/special-offers");
   },
+
+  /**
+   * Fetch dynamic homepage merchandising product sections (Best Sellers, New Arrivals, Featured, Trending)
+   * @param {Object} params - { limit, section }
+   */
+  async getMerchandising(params = {}) {
+    return api.get("/storefront/merchandising", params);
+  },
 };
 
 export default storefrontApi;

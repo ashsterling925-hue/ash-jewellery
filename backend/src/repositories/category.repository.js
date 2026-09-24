@@ -32,6 +32,10 @@ export const categoryRepository = {
     return prisma.category.findUnique({
       where: { id },
       include: {
+        subcategories: {
+          where: { status: "Active" },
+          orderBy: { sortOrder: "asc" },
+        },
         _count: {
           select: {
             subcategories: true,
@@ -46,9 +50,16 @@ export const categoryRepository = {
   /**
    * Find category by unique slug
    */
-  async findBySlug(slug) {
+  async findBySlug(slug, include = {}) {
     return prisma.category.findUnique({
       where: { slug },
+      include: {
+        subcategories: {
+          where: { status: "Active" },
+          orderBy: { sortOrder: "asc" },
+        },
+        ...include,
+      },
     });
   },
 

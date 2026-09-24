@@ -370,7 +370,7 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 32px;
+  gap: clamp(14px, 1.8vw, 28px);
   height: 100%;
   font-size: 10px;
   font-weight: 600;
@@ -415,6 +415,46 @@ img {
 
 .desktop-nav a.active {
   color: var(--ash-saffron);
+}
+
+/* Category Nav Wrapper & Dropdown Dialog */
+.category-nav-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+}
+
+.category-dropdown-dialog {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  pointer-events: auto;
+}
+
+/* Isolate links inside the category dropdown dialog from .desktop-nav a styling */
+.category-dropdown-dialog a {
+  position: static;
+  display: flex;
+  height: auto;
+  padding: 8px 12px;
+  border-bottom: none;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--ash-ink);
+  transition: background-color var(--ash-duration-fast) ease, color var(--ash-duration-fast) ease;
+}
+
+.category-dropdown-dialog a::after {
+  display: none !important;
+}
+
+.category-dropdown-dialog .dropdown-caret {
+  box-shadow: -2px -2px 3px rgba(0, 0, 0, 0.03);
 }
 
 /* ================= HEADER ACTIONS ================= */
@@ -462,73 +502,29 @@ img {
 
 .hero-banner {
   position: relative;
-  height: 520px;
-  min-height: 520px;
-  background: linear-gradient(135deg, #fbf7f0 0%, #f4ece0 42%, #e8ddcb 100%);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  width: 100%;
+  height: clamp(340px, 42vw, 620px);
+  min-height: 340px;
+  background-color: #f7f2ea;
   overflow: hidden;
 }
 
 .hero-banner.has-image {
   background-size: cover;
-  background-position: 62% center;
+  background-position: center;
 }
 
-.hero-banner:not(.has-image)::before {
-  content: "";
-  position: absolute;
-  top: -80px;
-  right: 8%;
-  width: 550px;
-  height: 550px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(185, 150, 87, 0.16) 0%, rgba(185, 150, 87, 0.04) 45%, transparent 70%);
-  pointer-events: none;
-}
-
-.hero-banner:not(.has-image)::after {
-  content: "";
-  position: absolute;
-  bottom: -60px;
-  left: 30%;
-  width: 420px;
-  height: 420px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(107, 29, 47, 0.06) 0%, transparent 65%);
-  pointer-events: none;
-}
-
-/*
-  Hero overlay.
-
-  The left side is lighter for text readability.
-  The right side remains transparent enough
-  so the lady can clearly be seen.
-*/
-/*
-  Hero overlay.
-  Applied when an image is present to maintain contrast.
-*/
 .hero-overlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
+  display: none !important;
 }
 
 .hero-banner.has-image .hero-overlay {
-  background: linear-gradient(
-    90deg,
-    rgba(241, 226, 201, 0.92) 0%,
-    rgba(241, 226, 201, 0.72) 32%,
-    rgba(241, 226, 201, 0.28) 55%,
-    rgba(45, 29, 17, 0.12) 100%
-  );
+  display: none !important;
+  background: transparent !important;
 }
 
 .hero-banner:not(.has-image) .hero-overlay {
-  background: transparent;
+  display: none !important;
 }
 
 .hero-content {
@@ -1123,13 +1119,9 @@ img {
   }
 
   .hero-banner {
-    height: 520px;
-    min-height: 520px;
-
-    /*
-      Keep lady visible on tablet/mobile.
-    */
-    background-position: 65% center;
+    height: clamp(260px, 40vw, 420px);
+    min-height: 260px;
+    background-position: center;
   }
 
   .hero-copy {
@@ -1167,29 +1159,16 @@ img {
   }
 
   /*
-    Taller mobile hero.
+    Responsive mobile hero banner.
   */
   .hero-banner {
-    height: 580px;
-    min-height: 580px;
-
-    /*
-      Move the lady further to the right.
-    */
-    background-position: 67% center;
+    height: clamp(190px, 48vw, 320px);
+    min-height: 190px;
+    background-position: center;
   }
 
-  /*
-    Lighter overlay so the lady remains visible.
-  */
   .hero-overlay {
-    background: linear-gradient(
-      90deg,
-      rgba(241, 226, 201, 0.93) 0%,
-      rgba(241, 226, 201, 0.7) 38%,
-      rgba(241, 226, 201, 0.28) 72%,
-      rgba(45, 29, 17, 0.12) 100%
-    );
+    display: none !important;
   }
 
   .hero-copy {
@@ -1261,9 +1240,9 @@ img {
 
 @media (max-width: 420px) {
   .hero-banner {
-    height: 600px;
-    min-height: 600px;
-    background-position: 68% center;
+    height: clamp(160px, 52vw, 260px);
+    min-height: 160px;
+    background-position: center;
   }
 
   .hero-copy h1 {
@@ -1477,18 +1456,7 @@ img {
    --------------------------------------------------------- */
 
 .hero-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-
-  background: linear-gradient(
-    90deg,
-    var(--ash-surface) 0%,
-    rgba(246, 241, 232, 0.98) 28%,
-    rgba(246, 241, 232, 0.76) 42%,
-    rgba(246, 241, 232, 0.08) 64%,
-    rgba(246, 241, 232, 0) 100%
-  );
+  display: none !important;
 }
 
 /* ---------------------------------------------------------

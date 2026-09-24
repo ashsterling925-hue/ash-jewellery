@@ -105,6 +105,7 @@ export default function Products() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [merchandisingFilter, setMerchandisingFilter] = useState("All");
   const [sortOrder, setSortOrder] = useState("recent");
   const [currentPage, setCurrentPage] = useState(1);
   const [viewProduct, setViewProduct] = useState(null);
@@ -159,7 +160,7 @@ export default function Products() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, categoryFilter, statusFilter, sortOrder]);
+  }, [search, categoryFilter, statusFilter, merchandisingFilter, sortOrder]);
 
   /* =======================================================
      CATEGORIES FILTER OPTIONS
@@ -201,7 +202,14 @@ export default function Products() {
       const fStatus = statusFilter.toUpperCase();
       const matchesStatus = statusFilter === "All" || pStatus === fStatus;
 
-      return matchesSearch && matchesCategory && matchesStatus;
+      const matchesMerchandising =
+        merchandisingFilter === "All" ||
+        (merchandisingFilter === "bestseller" && product.isBestSeller) ||
+        (merchandisingFilter === "new-arrival" && product.isNewArrival) ||
+        (merchandisingFilter === "featured" && product.isFeatured) ||
+        (merchandisingFilter === "trending" && product.isTrending);
+
+      return matchesSearch && matchesCategory && matchesStatus && matchesMerchandising;
     });
 
     return [...result].sort((a, b) => {
@@ -317,6 +325,7 @@ export default function Products() {
     setSearch("");
     setCategoryFilter("All");
     setStatusFilter("All");
+    setMerchandisingFilter("All");
     setSortOrder("recent");
   }
 
@@ -391,6 +400,19 @@ export default function Products() {
           <option value="Published">Published</option>
           <option value="Draft">Draft</option>
           <option value="Archived">Archived</option>
+        </select>
+
+        {/* MERCHANDISING */}
+        <select
+          className="filter-btn"
+          value={merchandisingFilter}
+          onChange={(event) => setMerchandisingFilter(event.target.value)}
+        >
+          <option value="All">All Merchandising</option>
+          <option value="bestseller">Best Sellers</option>
+          <option value="new-arrival">New Arrivals</option>
+          <option value="featured">Featured</option>
+          <option value="trending">Trending</option>
         </select>
 
         {/* CLEAR */}
@@ -496,6 +518,7 @@ export default function Products() {
                     <th>PRODUCT</th>
                     <th>SKU</th>
                     <th>CATEGORY</th>
+                    <th>HOMEPAGE TAGS</th>
                     <th>PRICE</th>
                     <th>STATUS</th>
                     <th>STOCK</th>
@@ -544,6 +567,35 @@ export default function Products() {
                         {/* CATEGORY */}
                         <td>
                           <span className="category-name">{categoryLabel}</span>
+                        </td>
+
+                        {/* HOMEPAGE TAGS */}
+                        <td>
+                          <div className="flex flex-wrap items-center gap-1 max-w-[190px]">
+                            {product.isBestSeller && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase bg-amber-500/15 text-amber-300 border border-amber-500/30 whitespace-nowrap">
+                                BESTSELLER
+                              </span>
+                            )}
+                            {product.isNewArrival && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 whitespace-nowrap">
+                                NEW ARRIVAL
+                              </span>
+                            )}
+                            {product.isFeatured && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase bg-purple-500/15 text-purple-300 border border-purple-500/30 whitespace-nowrap">
+                                FEATURED
+                              </span>
+                            )}
+                            {product.isTrending && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase bg-rose-500/15 text-rose-300 border border-rose-500/30 whitespace-nowrap">
+                                TRENDING
+                              </span>
+                            )}
+                            {!product.isBestSeller && !product.isNewArrival && !product.isFeatured && !product.isTrending && (
+                              <span className="text-[#8a8277] text-xs">—</span>
+                            )}
+                          </div>
                         </td>
 
                         {/* PRICE */}
@@ -763,6 +815,35 @@ export default function Products() {
                   <StockBadge
                     stock={viewProduct.stockStatus || viewProduct.stock}
                   />
+                </div>
+
+                <div>
+                  <span>Homepage Tags</span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {viewProduct.isBestSeller && (
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                        BESTSELLER
+                      </span>
+                    )}
+                    {viewProduct.isNewArrival && (
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                        NEW ARRIVAL
+                      </span>
+                    )}
+                    {viewProduct.isFeatured && (
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                        FEATURED
+                      </span>
+                    )}
+                    {viewProduct.isTrending && (
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wider uppercase bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                        TRENDING
+                      </span>
+                    )}
+                    {!viewProduct.isBestSeller && !viewProduct.isNewArrival && !viewProduct.isFeatured && !viewProduct.isTrending && (
+                      <span className="text-[#8a8277] text-xs">None</span>
+                    )}
+                  </div>
                 </div>
               </div>
 

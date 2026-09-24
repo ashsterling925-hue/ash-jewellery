@@ -9,9 +9,10 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import SiteHeader from "@/storefront/components/SiteHeader";
 import SiteFooter from "@/storefront/components/SiteFooter";
+import ProductCard from "@/storefront/components/ProductCard";
 import { storefrontApi } from "@/lib/api/storefrontApi";
 
 
@@ -19,22 +20,27 @@ function Home() {
   const [categories, setCategories] = useState([]);
   const [hero, setHero] = useState(null);
   const [banners, setBanners] = useState([]);
-  const [offers, setOffers] = useState([]);
+  const [merchandising, setMerchandising] = useState({
+    bestSellers: [],
+    newArrivals: [],
+    featured: [],
+    trending: [],
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
     async function loadHomePageData() {
       try {
-        const [catRes, heroRes, bannersRes, offersRes] = await Promise.allSettled([
+        const [catRes, heroRes, bannersRes, merchRes] = await Promise.allSettled([
           storefrontApi.getCategories({
             limit: 6,
             sortBy: "sortOrder",
             sortOrder: "asc",
           }),
           storefrontApi.getHero(),
-          storefrontApi.getBanners({ position: "HOME_PROMOTION" }),
-          storefrontApi.getSpecialOffers(),
+          storefrontApi.getBanners({ position: "ALL" }),
+          storefrontApi.getMerchandising({ limit: 8 }),
         ]);
 
         if (isMounted) {
@@ -47,8 +53,8 @@ function Home() {
           if (bannersRes.status === "fulfilled" && bannersRes.value?.data) {
             setBanners(bannersRes.value.data);
           }
-          if (offersRes.status === "fulfilled" && offersRes.value?.data) {
-            setOffers(offersRes.value.data);
+          if (merchRes.status === "fulfilled" && merchRes.value?.data) {
+            setMerchandising(merchRes.value.data);
           }
         }
       } catch (err) {
@@ -63,89 +69,186 @@ function Home() {
     };
   }, []);
 
-  const [heroImageError, setHeroImageError] = useState(false);
-
-  useEffect(() => {
-    setHeroImageError(false);
-  }, [hero?.mediaAsset?.url]);
-
   const firstCategorySlug = categories[0]?.slug || "bangles";
-  const rawHeroImage = hero?.mediaAsset?.url || null;
-  const hasValidHeroImage = Boolean(rawHeroImage && !heroImageError);
-  const heroAlt = hero?.mediaAsset?.altText || hero?.heading || "ASH Jewellery heritage collection";
+
+  // Build Hero Slides combining Non-Clickable Photos (Homepage CMS) and Clickable Banners (Banner CMS)
+  const heroSlides = useMemo(() => {
+    const slides = [];
+
+    // 1. Hero Photos from Homepage CMS (navigate to /category on click)
+    if (hero?.slides && Array.isArray(hero.slides) && hero.slides.length > 0) {
+      hero.slides.forEach((s, idx) => {
+        if (s.url) {
+          slides.push({
+            id: s.id || `hero-slide-${idx}`,
+            image: s.url,
+            alt: s.altText || "ASH Jewellery",
+            sortOrder: typeof s.sortOrder === "number" ? s.sortOrder : idx + 1,
+            isClickable: true,
+            targetUrl: "/category",
+          });
+        }
+      });
+    } else if (hero?.mediaAsset?.url) {
+      slides.push({
+        id: hero.id || "base-hero",
+        image: hero.mediaAsset.url,
+        alt: hero.mediaAsset.altText || "ASH Jewellery",
+        sortOrder: 1,
+        isClickable: true,
+        targetUrl: "/category",
+      });
+    }
+
+    // 2. Clickable Hero Banners from Banners CMS
+    if (banners && banners.length > 0) {
+      banners.forEach((b, idx) => {
+        const bImg = b.mediaAsset?.url || b.image;
+        if (bImg) {
+          slides.push({
+            id: b.id || `banner-slide-${idx}`,
+            image: bImg,
+            alt: b.title || "Hero Banner",
+            sortOrder: typeof b.sortOrder === "number" ? b.sortOrder : idx + 1,
+            isClickable: true,
+            targetUrl: b.targetUrl || "/category",
+          });
+        }
+      });
+    }
+
+    // 3. Fallback if no hero photos or banners configured yet
+    if (slides.length === 0) {
+      slides.push({
+        id: "fallback-hero",
+        isFallback: true,
+        image: null,
+        alt: "ASH Jewellery",
+        sortOrder: 1,
+        isClickable: false,
+        targetUrl: null,
+      });
+    }
+
+    // Sort by display order
+    return slides.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  }, [hero, banners]);
+
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isHeroHovered, setIsHeroHovered] = useState(false);
+
+  // Auto-slide advance every 5.5 seconds (paused when user hovers)
+  useEffect(() => {
+    if (heroSlides.length <= 1 || isHeroHovered) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 5500);
+    return () => clearInterval(timer);
+  }, [heroSlides.length, isHeroHovered]);
+
+  const handlePrevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
+  };
+
+  const handleNextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+  };
 
   return (
     <div className="home-page">
       <SiteHeader />
 
       <main>
-        {/* ================= HERO ================= */}
+        {/* ================= DYNAMIC HERO BANNER CAROUSEL ================= */}
         <section
-          className={`hero-banner ${hasValidHeroImage ? "has-image" : "no-image"}`}
-          style={hasValidHeroImage ? { backgroundImage: `url("${rawHeroImage}")` } : undefined}
+          className="hero-banner relative overflow-hidden"
+          onMouseEnter={() => setIsHeroHovered(true)}
+          onMouseLeave={() => setIsHeroHovered(false)}
         >
-          {hasValidHeroImage && (
-            <img
-              className="hero-background-image"
-              src={rawHeroImage}
-              alt={heroAlt}
-              onError={() => setHeroImageError(true)}
-            />
-          )}
+          {heroSlides.map((slide, idx) => {
+            const isActive = idx === currentSlide;
+            const hasImage = Boolean(slide.image);
 
-          <div className="hero-overlay"></div>
+            const slideContent = hasImage ? (
+              <img
+                className="hero-background-image w-full h-full object-cover"
+                src={slide.image}
+                alt={slide.alt}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-center px-4 bg-[#f8f5ef]">
+                <p className="font-serif text-2xl md:text-3xl text-[#1e1c19] tracking-wider">
+                  ASH JEWELLERY
+                </p>
+                <p className="text-[11px] text-[#8a7f72] tracking-[0.25em] uppercase mt-2 font-serif">
+                  Handcrafted 925 Sterling Silver Heirlooms
+                </p>
+              </div>
+            );
 
-          <div className="hero-content container">
-            <div className="hero-copy">
-              <p className="hero-eyebrow">TRADITION IN EVERY DETAIL</p>
-
-              <h1>
-                {hero?.heading ? (
-                  <span style={{ whiteSpace: "pre-line" }}>{hero.heading}</span>
-                ) : (
-                  <>
-                    THE ART OF
-                    <br />
-                    HERITAGE SILVER
-                  </>
-                )}
-              </h1>
-
-              <p className="hero-description">
-                {hero?.subheading ||
-                  "Discover handcrafted jewellery inspired by Indian tradition, made for your modern story."}
-              </p>
-
-              <Link
-                to={hero?.buttonUrl || `/category/${firstCategorySlug}`}
-                className="primary-cta"
+            return (
+              <div
+                key={slide.id}
+                className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                  isActive ? "opacity-100 z-10 pointer-events-auto" : "opacity-0 z-0 pointer-events-none"
+                }`}
               >
-                {hero?.buttonText || "EXPLORE COLLECTIONS"}
-                <ArrowRight size={17} />
-              </Link>
-            </div>
+                {slide.isClickable && slide.targetUrl ? (
+                  <Link
+                    to={slide.targetUrl}
+                    className="block w-full h-full cursor-pointer focus:outline-none"
+                    aria-label={slide.alt}
+                  >
+                    {slideContent}
+                  </Link>
+                ) : (
+                  <div className="w-full h-full select-none">
+                    {slideContent}
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
-            <div className="hero-side-copy">
-              <p>Timeless</p>
-              <p>Tradition</p>
-              <p>Modern You</p>
-              <div className="hero-side-line"></div>
-            </div>
-          </div>
+          {/* Interactive Navigation Controls (when multiple slides) */}
+          {heroSlides.length > 1 && (
+            <>
+              <button
+                type="button"
+                className="hero-arrow hero-arrow-left z-30 cursor-pointer"
+                aria-label="Previous slide"
+                onClick={handlePrevSlide}
+              >
+                <ChevronLeft size={24} />
+              </button>
 
-          <button
-            className="hero-arrow hero-arrow-left"
-            aria-label="Previous slide"
-          >
-            <ChevronLeft size={25} />
-          </button>
+              <button
+                type="button"
+                className="hero-arrow hero-arrow-right z-30 cursor-pointer"
+                aria-label="Next slide"
+                onClick={handleNextSlide}
+              >
+                <ChevronRight size={24} />
+              </button>
 
-          <button
-            className="hero-arrow hero-arrow-right"
-            aria-label="Next slide"
-          >
-            <ChevronRight size={25} />
-          </button>
+              {/* Slide Indicator Dots */}
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
+                {heroSlides.map((s, idx) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setCurrentSlide(idx)}
+                    className={`h-2 transition-all rounded-full cursor-pointer ${
+                      idx === currentSlide
+                        ? "w-8 bg-[#c5a265]"
+                        : "w-2 bg-white/50 hover:bg-white/80"
+                    }`}
+                    aria-label={`Go to slide ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </section>
 
         {/* ================= TRUST STRIP ================= */}
@@ -185,81 +288,21 @@ function Home() {
           </div>
         </section>
 
-        {/* ================= SPECIAL OFFERS (if active) ================= */}
-        {offers.length > 0 && (
-          <section className="special-offers-section py-12 bg-[#fbf8f2] border-y border-[#ede6da]">
+
+        {/* ================= BEST SELLERS (Dynamic Merchandising) ================= */}
+        {merchandising?.bestSellers?.length > 0 && (
+          <section className="product-showcase-section py-16 bg-[#fcfaf7] border-b border-[#eee7dd]" id="bestsellers">
             <div className="container">
-              <div className="text-center mb-8">
-                <p className="text-[11px] font-bold tracking-[0.25em] uppercase text-[#b99657] mb-2 font-serif">
-                  SPECIAL PRIVILEGES
-                </p>
-                <h2 className="text-2xl md:text-3xl font-serif text-[#1e1c19] tracking-wide">
-                  Curated Limited-Time Offers
-                </h2>
-                <div className="w-12 h-[2px] bg-[#b99657] mx-auto mt-3" />
+              <div className="signature-heading mb-10">
+                <p className="eyebrow">MOST CHERISHED</p>
+                <h2>Best Sellers</h2>
+                <div className="heading-line" />
               </div>
 
-              <div
-                className={`grid gap-6 ${
-                  offers.length === 1
-                    ? "max-w-xl mx-auto"
-                    : offers.length === 2
-                    ? "grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto"
-                    : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-                }`}
-              >
-                {offers.map((offer) => {
-                  const offerImg = offer.mediaAsset?.url || null;
-                  const targetUrl = offer.resolvedUrl || offer.buttonUrl || "/catalogue";
-
-                  return (
-                    <div
-                      key={offer.id}
-                      className="bg-white border border-[#e5ddd2] p-6 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group"
-                    >
-                      {offer.discountText && (
-                        <div className="absolute top-3 right-3 bg-[#6b1d2f] text-white text-[10px] font-bold tracking-widest px-2.5 py-1 uppercase">
-                          {offer.discountText}
-                        </div>
-                      )}
-
-                      <div>
-                        {offerImg && (
-                          <div className="w-full h-48 mb-4 overflow-hidden bg-[#f4efe6]">
-                            <img
-                              src={offerImg}
-                              alt={offer.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                          </div>
-                        )}
-                        <h3 className="font-serif text-lg text-[#1e1c19] mb-1.5 tracking-wide font-medium">
-                          {offer.title}
-                        </h3>
-                        {offer.subtitle && (
-                          <p className="text-xs text-[#b99657] font-semibold tracking-wider uppercase mb-2">
-                            {offer.subtitle}
-                          </p>
-                        )}
-                        {offer.description && (
-                          <p className="text-xs text-[#5c5549] leading-relaxed mb-4">
-                            {offer.description}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="pt-2">
-                        <Link
-                          to={targetUrl}
-                          className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.15em] text-[#1e1c19] group-hover:text-[#6b1d2f] transition-colors uppercase"
-                        >
-                          {offer.buttonText || "SHOP NOW"}
-                          <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                        </Link>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
+                {merchandising.bestSellers.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
               </div>
             </div>
           </section>
@@ -334,49 +377,59 @@ function Home() {
           </div>
         </section>
 
-        {/* ================= PROMOTIONAL BANNERS (if active) ================= */}
-        {banners.length > 0 && (
-          <section className="promotional-banners-section py-12 bg-white">
+        {/* ================= NEW ARRIVALS (Dynamic Merchandising) ================= */}
+        {merchandising?.newArrivals?.length > 0 && (
+          <section className="product-showcase-section py-16 bg-white border-b border-[#eee7dd]" id="new-arrivals">
             <div className="container">
-              <div className={`grid gap-6 ${banners.length === 1 ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"}`}>
-                {banners.map((banner) => {
-                  const bannerImg = banner.mediaAsset?.url || banner.image;
-                  const bannerLink = banner.targetUrl || "/catalogue";
+              <div className="signature-heading mb-10">
+                <p className="eyebrow">FRESH CREATIONS</p>
+                <h2>New Arrivals</h2>
+                <div className="heading-line" />
+              </div>
 
-                  return (
-                    <div
-                      key={banner.id}
-                      className="relative overflow-hidden group min-h-[260px] md:min-h-[300px] flex items-center bg-[#1e1c19] border border-[#e5ddd2]"
-                    >
-                      {bannerImg && (
-                        <img
-                          src={bannerImg}
-                          alt={banner.title}
-                          className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-75 group-hover:scale-105 transition-all duration-700"
-                        />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-transparent" />
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
+                {merchandising.newArrivals.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
-                      <div className="relative z-10 p-8 md:p-10 max-w-md text-white">
-                        {banner.subtitle && (
-                          <p className="text-[10px] font-bold tracking-[0.25em] text-[#c5a265] uppercase mb-2">
-                            {banner.subtitle}
-                          </p>
-                        )}
-                        <h3 className="text-xl md:text-2xl font-serif font-medium tracking-wide mb-3 leading-snug">
-                          {banner.title}
-                        </h3>
-                        <Link
-                          to={bannerLink}
-                          className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.15em] text-white border-b border-[#c5a265] pb-1 hover:text-[#c5a265] transition-colors uppercase mt-2"
-                        >
-                          DISCOVER MORE
-                          <ArrowRight size={14} />
-                        </Link>
-                      </div>
-                    </div>
-                  );
-                })}
+
+        {/* ================= FEATURED PRODUCTS (Dynamic Merchandising) ================= */}
+        {merchandising?.featured?.length > 0 && (
+          <section className="product-showcase-section py-16 bg-[#fcfaf7] border-b border-[#eee7dd]" id="featured-collection">
+            <div className="container">
+              <div className="signature-heading mb-10">
+                <p className="eyebrow">CURATED SPOTLIGHT</p>
+                <h2>Featured Products</h2>
+                <div className="heading-line" />
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
+                {merchandising.featured.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ================= TRENDING NOW (Dynamic Merchandising) ================= */}
+        {merchandising?.trending?.length > 0 && (
+          <section className="product-showcase-section py-16 bg-white border-b border-[#eee7dd]" id="trending-products">
+            <div className="container">
+              <div className="signature-heading mb-10">
+                <p className="eyebrow">THE MODERN EDIT</p>
+                <h2>Trending Products</h2>
+                <div className="heading-line" />
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
+                {merchandising.trending.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
               </div>
             </div>
           </section>
