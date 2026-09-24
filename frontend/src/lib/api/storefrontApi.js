@@ -125,6 +125,13 @@ export const storefrontApi = {
   },
 
   /**
+   * Fetch dynamic signature collections homepage section config & active categories
+   */
+  async getSignatureCollections() {
+    return cachedFetch("/storefront/signature-collections", null, 60000);
+  },
+
+  /**
    * Invalidate client-side cache
    */
   clearCache() {

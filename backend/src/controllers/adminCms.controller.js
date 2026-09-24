@@ -1,6 +1,7 @@
 import { heroService } from "../services/hero.service.js";
 import { bannerService } from "../services/banner.service.js";
 import { specialOfferService } from "../services/specialOffer.service.js";
+import { signatureCollectionsService } from "../services/signatureCollections.service.js";
 import { sendSuccess, sendPaginated } from "../utils/apiResponse.js";
 import { memoryCache } from "../utils/cache.js";
 
@@ -180,6 +181,34 @@ export const adminCmsController = {
       return sendSuccess(res, {
         message: result.message,
         data: result.offer,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // ==========================================
+  // 4. SIGNATURE COLLECTIONS
+  // ==========================================
+
+  async getSignatureCollections(req, res, next) {
+    try {
+      const data = await signatureCollectionsService.getConfig();
+      return sendSuccess(res, {
+        message: "Signature collections configuration fetched successfully",
+        data,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async saveSignatureCollections(req, res, next) {
+    try {
+      const data = await signatureCollectionsService.saveConfig(req.body);
+      return sendSuccess(res, {
+        message: "Signature collections configuration saved successfully",
+        data,
       });
     } catch (error) {
       next(error);

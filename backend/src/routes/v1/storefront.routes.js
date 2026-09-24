@@ -61,5 +61,6 @@ router.get("/banners", storefrontController.getBanners);
 router.get("/special-offers", storefrontController.getSpecialOffers);
 router.get("/merchandising", storefrontController.getHomepageMerchandising);
 router.get("/homepage/merchandising", storefrontController.getHomepageMerchandising);
+router.get("/signature-collections", storefrontController.getSignatureCollections);
 
 export default router;

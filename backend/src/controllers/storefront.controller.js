@@ -6,6 +6,7 @@ import { attributeService } from "../services/attribute.service.js";
 import { heroService } from "../services/hero.service.js";
 import { bannerService } from "../services/banner.service.js";
 import { specialOfferService } from "../services/specialOffer.service.js";
+import { signatureCollectionsService } from "../services/signatureCollections.service.js";
 import { sendSuccess, sendPaginated } from "../utils/apiResponse.js";
 import { ApiError } from "../utils/apiError.js";
 import { memoryCache } from "../utils/cache.js";
@@ -373,6 +374,31 @@ export const storefrontController = {
         message: "Homepage merchandising products fetched successfully",
         data,
       });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  /**
+   * GET /api/v1/storefront/signature-collections
+   * Get dynamic signature collections homepage section config & active categories
+   */
+  async getSignatureCollections(req, res, next) {
+    try {
+      const cacheKey = "storefront:signature-collections";
+      const cached = memoryCache.get(cacheKey);
+      if (cached) {
+        return sendSuccess(res, cached);
+      }
+
+      const data = await signatureCollectionsService.getConfig();
+      const responsePayload = {
+        message: "Signature collections fetched successfully",
+        data,
+      };
+      memoryCache.set(cacheKey, responsePayload, 60);
+
+      return sendSuccess(res, responsePayload);
     } catch (error) {
       next(error);
     }

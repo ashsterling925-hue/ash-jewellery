@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useSearchParams, useLocation, Link } from "react-router-dom";
-import { Filter, X, ChevronDown, ChevronRight, SlidersHorizontal, ArrowLeft, Sparkles, ShieldCheck } from "lucide-react";
+import { Filter, X, ChevronDown, ChevronRight, SlidersHorizontal } from "lucide-react";
 import SiteLayout from "@/storefront/components/SiteLayout";
 import ProductCard from "@/storefront/components/ProductCard";
 import { storefrontApi } from "@/lib/api/storefrontApi";
@@ -20,6 +20,12 @@ const PRICE_FILTER_OPTIONS = [
   { label: "Above ₹20,000", min: 20000, max: null },
 ];
 
+const GENDER_OPTIONS = [
+  { label: "Women", value: "WOMEN" },
+  { label: "Men", value: "MEN" },
+  { label: "Unisex", value: "UNISEX" },
+];
+
 export default function CataloguePage({ forcedCategorySlug }) {
   const { categorySlug, subcategorySlug, collectionSlug } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -31,6 +37,7 @@ export default function CataloguePage({ forcedCategorySlug }) {
   const activeSubcategorySlug = searchParams.get("subcategory") || subcategorySlug;
   const queryMinPrice = searchParams.get("minPrice") || "";
   const queryMaxPrice = searchParams.get("maxPrice") || "";
+  const queryGender = searchParams.get("gender") || "";
 
   const queryAttrs = useMemo(() => {
     const raw = searchParams.get("attrs") || searchParams.get("attributeValueIds") || "";
@@ -54,6 +61,7 @@ export default function CataloguePage({ forcedCategorySlug }) {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [expandedFilterIds, setExpandedFilterIds] = useState(new Set());
   const [isPriceFilterExpanded, setIsPriceFilterExpanded] = useState(true);
+  const [isGenderFilterExpanded, setIsGenderFilterExpanded] = useState(true);
 
   // Determine active context
   const activeCategorySlug = forcedCategorySlug || categorySlug;
@@ -202,6 +210,7 @@ export default function CataloguePage({ forcedCategorySlug }) {
         if (querySearch) params.search = querySearch;
         if (queryMinPrice) params.minPrice = queryMinPrice;
         if (queryMaxPrice) params.maxPrice = queryMaxPrice;
+        if (queryGender) params.gender = queryGender;
         if (queryAttrs.length > 0) params.attributeValueIds = queryAttrs.join(",");
 
         const response = await storefrontApi.getProducts(params);
@@ -224,7 +233,7 @@ export default function CataloguePage({ forcedCategorySlug }) {
     return () => {
       isMounted = false;
     };
-  }, [activeCategorySlug, activeSubcategorySlug, collectionSlug, querySearch, querySort, queryPage, queryAttrs, queryMinPrice, queryMaxPrice]);
+  }, [activeCategorySlug, activeSubcategorySlug, collectionSlug, querySearch, querySort, queryPage, queryAttrs, queryMinPrice, queryMaxPrice, queryGender]);
 
   // URL State Updates
   const updateUrlParam = (updater) => {
@@ -276,6 +285,24 @@ export default function CataloguePage({ forcedCategorySlug }) {
     });
   };
 
+  const handleSetGender = (genderVal) => {
+    updateUrlParam((params) => {
+      if (params.get("gender")?.toUpperCase() === genderVal.toUpperCase()) {
+        params.delete("gender");
+      } else {
+        params.set("gender", genderVal);
+      }
+      params.set("page", "1");
+    });
+  };
+
+  const handleClearGenderFilter = () => {
+    updateUrlParam((params) => {
+      params.delete("gender");
+      params.set("page", "1");
+    });
+  };
+
   const handleSortChange = (newSort) => {
     updateUrlParam((params) => {
       params.set("sort", newSort);
@@ -307,6 +334,7 @@ export default function CataloguePage({ forcedCategorySlug }) {
       params.delete("attributeValueIds");
       params.delete("minPrice");
       params.delete("maxPrice");
+      params.delete("gender");
       params.delete("subcategory");
       params.set("page", "1");
     });
@@ -335,96 +363,36 @@ export default function CataloguePage({ forcedCategorySlug }) {
 
   return (
     <SiteLayout>
-      <div className="bg-[#fbf8f2] min-h-screen py-8">
-        <div className="container">
-          {/* Breadcrumb & Assurance Strip */}
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 text-[11px] text-[#716b62]">
-            <div className="flex items-center gap-2">
-              <Link
-                to="/"
-                className="inline-flex items-center gap-1.5 font-medium tracking-wider text-[#716b62] hover:text-[#b99657] transition-colors uppercase"
-              >
-                <ArrowLeft size={13} />
-                Home
-              </Link>
-              <span className="text-[#d5cbbe]">/</span>
-              {categoryData ? (
-                <>
-                  <Link
-                    to={`/category/${categoryData.slug}`}
-                    onClick={() => handleSelectSubcategory(null)}
-                    className={`font-medium tracking-wider uppercase transition-colors ${
-                      !activeSubcategorySlug
-                        ? "text-[#1e1c19] font-semibold"
-                        : "text-[#716b62] hover:text-[#b99657]"
-                    }`}
-                  >
-                    {categoryData.name}
-                  </Link>
-                  {activeSubcategorySlug && (
-                    <>
-                      <span className="text-[#d5cbbe]">/</span>
-                      <span className="font-semibold text-[#8B263E] uppercase tracking-wider">
-                        {activeSubcatObj?.name || activeSubcategorySlug}
-                      </span>
-                    </>
-                  )}
-                </>
-              ) : (
-                <span className="font-semibold text-[#1e1c19] uppercase tracking-wider">
-                  Catalogue
-                </span>
-              )}
-            </div>
-
-            {/* Assurance Hallmark */}
-            <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f4ece0]/60 border border-[#e8dfd3] text-[10px] text-[#8a7a67] tracking-wider uppercase font-medium">
-              <ShieldCheck size={12} className="text-[#b99657]" />
-              <span>Certified 925 Sterling Silver</span>
-            </div>
-          </div>
-
-          {/* Luxury Showcase Header Banner */}
-          <div className="relative mb-8 overflow-hidden rounded-2xl border border-[#e8ded2] bg-gradient-to-b from-[#fffdfa] via-[#fbf8f2] to-[#f8f3ea] px-6 py-8 sm:px-12 sm:py-12 text-center shadow-[0_4px_24px_rgba(0,0,0,0.03)]">
+      <div className="bg-[#fbf8f2] min-h-screen py-4 sm:py-6">
+        <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Luxury Showcase Header Banner (Full-Width, Compact Height) */}
+          <div className="relative mb-4 w-full overflow-hidden rounded-xl border border-[#e8ded2] bg-gradient-to-b from-[#fffdfa] via-[#fbf8f2] to-[#f8f3ea] px-4 py-4 sm:px-8 sm:py-5 text-center shadow-xs">
             {/* Subtle decorative glow corner orbs */}
-            <div className="pointer-events-none absolute -left-12 -top-12 h-44 w-44 rounded-full bg-[#b99657]/10 blur-2xl" />
-            <div className="pointer-events-none absolute -right-12 -bottom-12 h-44 w-44 rounded-full bg-[#8B263E]/8 blur-2xl" />
+            <div className="pointer-events-none absolute -left-12 -top-12 h-32 w-32 rounded-full bg-[#b99657]/8 blur-xl" />
+            <div className="pointer-events-none absolute -right-12 -bottom-12 h-32 w-32 rounded-full bg-[#8B263E]/6 blur-xl" />
 
-            {/* Eyebrow badge */}
-            <div className="relative inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#f4ece0] border border-[#e2d5c3] text-[10px] font-semibold tracking-[0.25em] text-[#97753e] uppercase mb-3.5 shadow-2xs font-sans">
-              <Sparkles size={11} className="text-[#b99657]" />
-              <span>{contextData.eyebrow}</span>
-            </div>
-
-            {/* Grand Title */}
-            <h1 className="relative font-serif text-3xl sm:text-4xl md:text-5xl font-normal tracking-wide text-[#1c1a17] leading-tight max-w-3xl mx-auto">
+            {/* Title */}
+            <h1 className="relative font-serif text-2xl sm:text-3xl font-medium tracking-wide text-[#1c1a17] leading-snug max-w-2xl mx-auto">
               {contextData.title}
             </h1>
 
             {/* Description */}
             {contextData.description && (
-              <p className="relative mx-auto mt-3 max-w-xl text-xs sm:text-sm leading-relaxed text-[#685f54] font-light">
+              <p className="relative mx-auto mt-1 max-w-xl text-xs leading-relaxed text-[#685f54] font-light">
                 {contextData.description}
               </p>
             )}
 
-            {/* Jewel Insignia Divider */}
-            <div className="relative flex items-center justify-center gap-3 my-5">
-              <div className="h-px w-14 bg-gradient-to-r from-transparent to-[#c5a265]" />
-              <div className="w-1.5 h-1.5 rotate-45 bg-[#c5a265]" />
-              <div className="h-px w-14 bg-gradient-to-l from-transparent to-[#c5a265]" />
-            </div>
-
             {/* Subcategory Pills Strip */}
             {categoryData?.subcategories?.length > 0 && (
-              <div className="relative mt-2 inline-flex flex-wrap items-center justify-center gap-2 p-1.5 bg-white/70 backdrop-blur-xs rounded-full border border-[#e8ded2] shadow-2xs max-w-full">
+              <div className="relative mt-2.5 inline-flex flex-wrap items-center justify-center gap-1.5 p-1 bg-white/80 backdrop-blur-xs rounded-full border border-[#e8ded2] shadow-2xs max-w-full">
                 {/* All Category Pill */}
                 <button
                   type="button"
                   onClick={() => handleSelectSubcategory(null)}
-                  className={`group relative cursor-pointer px-4 sm:px-5 py-1.5 sm:py-2 text-xs font-serif rounded-full transition-all duration-200 border flex items-center gap-1.5 ${
+                  className={`group relative cursor-pointer px-3.5 py-1 text-xs font-serif rounded-full transition-all duration-200 border flex items-center gap-1.5 ${
                     !activeSubcategorySlug
-                      ? "bg-[#7e1c2e] text-white border-[#7e1c2e] shadow-md shadow-[#7e1c2e]/20 font-semibold"
+                      ? "bg-[#7e1c2e] text-white border-[#7e1c2e] shadow-xs font-semibold"
                       : "bg-transparent text-[#4a4238] border-transparent hover:border-[#dfd5c7] hover:text-[#1c1a17] hover:bg-white/90"
                   }`}
                 >
@@ -443,9 +411,9 @@ export default function CataloguePage({ forcedCategorySlug }) {
                       key={sub.id}
                       type="button"
                       onClick={() => handleSelectSubcategory(sub.slug)}
-                      className={`group relative cursor-pointer px-4 sm:px-5 py-1.5 sm:py-2 text-xs font-serif rounded-full transition-all duration-200 border flex items-center gap-1.5 ${
+                      className={`group relative cursor-pointer px-3.5 py-1 text-xs font-serif rounded-full transition-all duration-200 border flex items-center gap-1.5 ${
                         isSelected
-                          ? "bg-[#7e1c2e] text-white border-[#7e1c2e] shadow-md shadow-[#7e1c2e]/20 font-semibold"
+                          ? "bg-[#7e1c2e] text-white border-[#7e1c2e] shadow-xs font-semibold"
                           : "bg-transparent text-[#4a4238] border-transparent hover:border-[#dfd5c7] hover:text-[#1c1a17] hover:bg-white/90"
                       }`}
                     >
@@ -528,7 +496,7 @@ export default function CataloguePage({ forcedCategorySlug }) {
           </div>
 
           {/* Active Filter Chips Bar */}
-          {(hasPriceFilter || Boolean(activeSubcategorySlug) || queryAttrs.length > 0) && (
+          {(hasPriceFilter || Boolean(activeSubcategorySlug) || Boolean(queryGender) || queryAttrs.length > 0) && (
             <div className="mb-6 flex flex-wrap items-center gap-2.5 rounded-xl border border-[#eedfd8] bg-[#fdfaf8] px-4 py-2.5">
               <span className="text-xs font-semibold uppercase tracking-wider text-[#8a7f72] mr-1">
                 Active Filters:
@@ -545,6 +513,29 @@ export default function CataloguePage({ forcedCategorySlug }) {
                     onClick={() => handleSelectSubcategory(null)}
                     className="w-4 h-4 rounded-full bg-[#f9e9e6] hover:bg-[#7e1c2e] hover:text-white flex items-center justify-center text-[#7e1c2e] transition-colors cursor-pointer"
                     aria-label="Remove subcategory filter"
+                  >
+                    <X size={10} />
+                  </button>
+                </span>
+              )}
+
+              {queryGender && (
+                <span className="inline-flex items-center gap-2 rounded-full bg-white border border-[#dfd4c5] pl-3 pr-2 py-1 text-xs text-[#1e1c19] font-medium shadow-2xs">
+                  <span>
+                    Gender:{" "}
+                    <strong>
+                      {queryGender.toUpperCase() === "WOMEN"
+                        ? "Women"
+                        : queryGender.toUpperCase() === "MEN"
+                        ? "Men"
+                        : "Unisex"}
+                    </strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleClearGenderFilter}
+                    className="w-4 h-4 rounded-full bg-[#f4ede3] hover:bg-[#1e1c19] hover:text-white flex items-center justify-center text-[#716b62] transition-colors cursor-pointer"
+                    aria-label="Remove gender filter"
                   >
                     <X size={10} />
                   </button>
@@ -586,7 +577,7 @@ export default function CataloguePage({ forcedCategorySlug }) {
                   <h2 className="flex items-center gap-2 text-xs font-bold tracking-widest text-[#1e1c19] uppercase">
                     <Filter size={14} className="text-[#8B263E]" /> Filter By
                   </h2>
-                  {(hasPriceFilter || queryAttrs.length > 0) && (
+                  {(hasPriceFilter || Boolean(queryGender) || queryAttrs.length > 0) && (
                     <button
                       type="button"
                       onClick={handleClearAllFilters}
@@ -594,6 +585,46 @@ export default function CataloguePage({ forcedCategorySlug }) {
                     >
                       Clear All
                     </button>
+                  )}
+                </div>
+
+                {/* Gender Filter Section (Women / Men / Unisex) */}
+                <div className="border-b border-[#f1eadf] pb-4">
+                  <button
+                    type="button"
+                    onClick={() => setIsGenderFilterExpanded((prev) => !prev)}
+                    className="flex w-full items-center justify-between py-1 text-left text-xs font-semibold tracking-wider text-[#1e1c19] uppercase cursor-pointer"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      Gender
+                      {queryGender && (
+                        <span className="text-[10px] font-normal text-[#8B263E]">(1)</span>
+                      )}
+                    </span>
+                    {isGenderFilterExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                  </button>
+
+                  {isGenderFilterExpanded && (
+                    <div className="mt-2.5 space-y-1.5">
+                      {GENDER_OPTIONS.map((opt) => {
+                        const isSelected = queryGender.toUpperCase() === opt.value.toUpperCase();
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => handleSetGender(opt.value)}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs text-left transition-colors cursor-pointer ${
+                              isSelected
+                                ? "bg-[#fbeee8] text-[#8B263E] font-medium"
+                                : "text-[#716b62] hover:bg-[#f6eee2] hover:text-[#1e1c19]"
+                            }`}
+                          >
+                            <span>{opt.label}</span>
+                            {isSelected && <span className="text-[10px] text-[#8B263E]">✓</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
 
@@ -646,7 +677,7 @@ export default function CataloguePage({ forcedCategorySlug }) {
                 </div>
 
                 {/* Filterable Attributes List */}
-                {filters.length > 0 ? (
+                {filters.length > 0 &&
                   filters.map((attr) => {
                     const isExpanded = expandedFilterIds.has(attr.id);
                     const activeCount = (attr.values || []).filter((v) =>
@@ -694,12 +725,7 @@ export default function CataloguePage({ forcedCategorySlug }) {
                         )}
                       </div>
                     );
-                  })
-                ) : (
-                  <div className="py-2 text-xs text-[#8a8277]">
-                    No dynamic filters configured.
-                  </div>
-                )}
+                  })}
               </div>
             </aside>
 
@@ -726,6 +752,42 @@ export default function CataloguePage({ forcedCategorySlug }) {
                   </div>
 
                   <div className="flex-1 overflow-y-auto py-4 space-y-6">
+                    {/* Mobile Gender Filters */}
+                    <div className="border-b border-[#f1eadf] pb-4">
+                      <p className="mb-2 text-xs font-semibold tracking-wider text-[#1e1c19] uppercase flex items-center justify-between">
+                        <span>Gender</span>
+                        {queryGender && (
+                          <button
+                            type="button"
+                            onClick={handleClearGenderFilter}
+                            className="text-[10px] text-[#8B263E] lowercase font-normal hover:underline cursor-pointer"
+                          >
+                            clear
+                          </button>
+                        )}
+                      </p>
+                      <div className="space-y-1.5">
+                        {GENDER_OPTIONS.map((opt) => {
+                          const isSelected = queryGender.toUpperCase() === opt.value.toUpperCase();
+                          return (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => handleSetGender(opt.value)}
+                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs text-left transition-colors cursor-pointer ${
+                                isSelected
+                                  ? "bg-[#fbeee8] text-[#8B263E] font-medium"
+                                  : "text-[#716b62] hover:bg-[#f6eee2] hover:text-[#1e1c19]"
+                              }`}
+                            >
+                              <span>{opt.label}</span>
+                              {isSelected && <span className="text-[10px] text-[#8B263E]">✓</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
                     {/* Mobile Price Filters */}
                     <div className="border-b border-[#f1eadf] pb-4">
                       <p className="mb-2 text-xs font-semibold tracking-wider text-[#1e1c19] uppercase">

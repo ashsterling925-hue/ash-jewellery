@@ -24,18 +24,20 @@ export default function HomeSkeleton() {
       </section>
 
       {/* Categories Bar Skeleton */}
-      <section className="border-b border-[#e7dfd3] bg-[#fffdf9] py-8">
+      <section className="border-b border-[#e7dfd3] bg-[#fffdf9] py-12">
         <div className="container mx-auto px-4 max-w-6xl">
-          <div className="flex items-center justify-between mb-5">
-            <div className="w-36 h-5 luxury-shimmer rounded-xs" />
-            <div className="w-16 h-3.5 luxury-shimmer rounded-xs" />
+          <div className="text-center mb-8 flex flex-col items-center gap-2">
+            <div className="w-28 h-3 luxury-shimmer rounded-xs" />
+            <div className="w-56 h-6 luxury-shimmer rounded-xs" />
+            <div className="w-10 h-0.5 bg-[#c5a265] mt-1" />
           </div>
 
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex flex-col items-center gap-2.5">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full luxury-shimmer border border-[#e8ded2]" />
-                <div className="w-14 h-3 luxury-shimmer rounded-xs" />
+          <div className="flex flex-wrap justify-center gap-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="w-[180px] flex flex-col items-center gap-3">
+                <div className="aspect-[0.88/1] w-full luxury-shimmer rounded-none border border-[#e8ded2]" />
+                <div className="w-20 h-4 luxury-shimmer rounded-xs" />
+                <div className="w-14 h-2.5 luxury-shimmer rounded-xs" />
               </div>
             ))}
           </div>

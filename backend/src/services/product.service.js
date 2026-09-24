@@ -319,6 +319,23 @@ export const productService = {
       });
     }
 
+    // Gender filter: MEN, WOMEN, UNISEX
+    if (query.gender && query.gender !== "All") {
+      const g = query.gender.trim();
+      if (g.toUpperCase() === "MEN" || g.toUpperCase() === "WOMEN") {
+        whereConditions.push({
+          OR: [
+            { gender: { equals: g, mode: "insensitive" } },
+            { gender: { equals: "UNISEX", mode: "insensitive" } },
+          ],
+        });
+      } else {
+        whereConditions.push({
+          gender: { equals: g, mode: "insensitive" },
+        });
+      }
+    }
+
     // Price range filters
     if (query.minPrice !== undefined && query.minPrice !== "" && !isNaN(Number(query.minPrice))) {
       whereConditions.push({

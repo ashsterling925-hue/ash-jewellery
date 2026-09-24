@@ -762,14 +762,26 @@ img {
 }
 
 .signature-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 24px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .signature-card {
   display: block;
   text-align: center;
+  flex: 0 0 200px;
+  width: 200px;
+  max-width: 220px;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease;
+}
+
+.signature-card:hover {
+  transform: translateY(-4px);
 }
 
 .signature-image {
@@ -1084,7 +1096,15 @@ img {
   }
 
   .signature-grid {
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .signature-card {
+    flex: 0 0 175px;
+    width: 175px;
   }
 
   .trust-grid {
@@ -1208,8 +1228,16 @@ img {
   }
 
   .signature-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 18px 10px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px 12px;
+  }
+
+  .signature-card {
+    flex: 0 0 calc(50% - 10px);
+    max-width: 180px;
+    min-width: 135px;
   }
 
   .signature-heading h2 {
@@ -2726,7 +2754,7 @@ img {
   --sidebar-muted: #aaa298;
 
   --sidebar-width: 238px;
-  --header-height: 72px;
+  --header-height: 56px;
 
   --shadow-sm: 0 2px 10px rgba(30, 28, 25, 0.04);
   --shadow-md: 0 8px 28px rgba(30, 28, 25, 0.06);
@@ -2792,7 +2820,7 @@ img {
 }
 
 .admin-content {
-  padding: 32px 34px 48px;
+  padding: 16px 20px 28px;
   min-height: calc(100vh - var(--header-height));
 }
 
@@ -3271,13 +3299,13 @@ img {
   color: var(--ink);
 
   font-family: "Playfair Display", serif;
-  font-size: 36px;
+  font-size: 22px;
   font-weight: 600;
-  line-height: 1.05;
+  line-height: 1.2;
 }
 
 .page-description {
-  margin: 8px 0 0;
+  margin: 3px 0 0;
 
   color: var(--muted);
 
@@ -3296,7 +3324,7 @@ img {
 /* Dashboard heading */
 
 .dashboard-heading {
-  margin-bottom: 26px;
+  margin-bottom: 14px;
 }
 
 .dashboard-heading h1 {
@@ -3305,14 +3333,14 @@ img {
   color: var(--ink);
 
   font-family: "Playfair Display", serif;
-  font-size: 38px;
+  font-size: 24px;
   font-weight: 600;
-  line-height: 1.05;
-  letter-spacing: -0.4px;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
 }
 
 .dashboard-heading p:last-child {
-  margin: 8px 0 0;
+  margin: 3px 0 0;
 
   color: var(--muted);
 
@@ -3748,14 +3776,14 @@ img {
 /* Products heading */
 
 .products-heading {
-  min-height: 100px;
+  min-height: unset;
 
-  margin-bottom: 22px;
+  margin-bottom: 12px;
 
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
-  gap: 25px;
+  gap: 16px;
 }
 
 .products-heading h1 {
@@ -3764,13 +3792,13 @@ img {
   color: var(--ink);
 
   font-family: "Playfair Display", serif;
-  font-size: 38px;
+  font-size: 22px;
   font-weight: 600;
-  line-height: 1;
+  line-height: 1.2;
 }
 
 .products-heading p:last-child {
-  margin: 8px 0 0;
+  margin: 2px 0 0;
 
   color: var(--muted);
 
@@ -3778,9 +3806,9 @@ img {
 }
 
 .add-product-btn {
-  height: 38px;
+  height: 32px;
 
-  padding: 0 16px;
+  padding: 0 14px;
 
   display: inline-flex;
   align-items: center;
@@ -3790,15 +3818,15 @@ img {
   flex-shrink: 0;
 
   border: 1px solid var(--saffron);
-  border-radius: 7px;
+  border-radius: 6px;
 
   background: var(--saffron);
   color: white;
 
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
 
-  box-shadow: 0 4px 12px rgba(210, 138, 37, 0.15);
+  box-shadow: 0 2px 6px rgba(210, 138, 37, 0.15);
 
   transition: 0.18s ease;
 }
@@ -3812,19 +3840,20 @@ img {
 /* Products toolbar */
 
 .products-toolbar {
-  min-height: 56px;
+  min-height: unset;
 
-  margin-bottom: 15px;
+  margin-bottom: 12px;
 
-  display: grid;
-  grid-template-columns: minmax(250px, 1fr) 120px 110px 100px;
-  gap: 9px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }
 
 .products-search {
-  height: 38px;
+  height: 34px;
 
-  padding: 0 12px;
+  padding: 0 10px;
 
   display: flex;
   align-items: center;
@@ -3833,9 +3862,13 @@ img {
   background: var(--paper);
 
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: 6px;
 
   color: var(--muted);
+
+  flex: 1;
+  min-width: 200px;
+  max-width: 380px;
 }
 
 .products-search:focus-within {
@@ -3861,8 +3894,9 @@ img {
 }
 
 .filter-btn,
-.sort-btn {
-  height: 38px;
+.sort-btn,
+.module-select {
+  height: 34px;
 
   padding: 0 11px;
 
@@ -3874,18 +3908,20 @@ img {
   background: var(--paper);
 
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: 6px;
 
   color: var(--muted);
 
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 500;
+  cursor: pointer;
 
   transition: 0.18s ease;
 }
 
 .filter-btn:hover,
-.sort-btn:hover {
+.sort-btn:hover,
+.module-select:hover {
   border-color: #d6ccbd;
   color: var(--ink);
   background: #fffefa;
@@ -3905,9 +3941,9 @@ img {
 }
 
 .products-card-header {
-  min-height: 70px;
+  min-height: unset;
 
-  padding: 17px 20px;
+  padding: 10px 16px;
 
   display: flex;
   align-items: center;
@@ -3923,16 +3959,19 @@ img {
   color: var(--ink);
 
   font-family: "Playfair Display", serif;
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 600;
+  line-height: 1.2;
 }
 
-.products-card-header span {
+.products-card-header span,
+.products-card-header p {
   display: block;
 
-  margin-top: 4px;
+  margin-top: 1px;
 
   color: var(--muted);
+  font-size: 11px;
 
   font-size: 9px;
 }
@@ -7672,10 +7711,10 @@ img {
 /* Main Products heading */
 .products-heading h1 {
   font-family: "Playfair Display", Georgia, serif !important;
-  font-size: 40px !important;
-  font-weight: 500 !important;
-  line-height: 1.15 !important;
-  letter-spacing: -0.4px !important;
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.2px !important;
   color: #1e1c19 !important;
 }
 
@@ -7691,8 +7730,8 @@ img {
 /* Description */
 .products-heading > div > p:not(.eyebrow) {
   font-family: "Noto Sans", sans-serif !important;
-  font-size: 12px !important;
-  line-height: 1.6 !important;
+  font-size: 11px !important;
+  line-height: 1.4 !important;
   color: #716b62 !important;
 }
 
@@ -7705,10 +7744,10 @@ img {
 .products-card-header h3 {
   font-family: "Playfair Display", Georgia, serif !important;
 
-  font-size: 21px !important;
-  font-weight: 500 !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
 
-  line-height: 1.3 !important;
+  line-height: 1.2 !important;
 
   color: #1e1c19 !important;
 }

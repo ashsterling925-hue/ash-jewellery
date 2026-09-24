@@ -14,10 +14,12 @@ import SiteHeader from "@/storefront/components/SiteHeader";
 import SiteFooter from "@/storefront/components/SiteFooter";
 import ProductCard from "@/storefront/components/ProductCard";
 import HomeSkeleton from "@/storefront/components/HomeSkeleton";
+import SignatureCollections from "@/storefront/components/SignatureCollections";
 import { storefrontApi } from "@/lib/api/storefrontApi";
 
 function Home() {
   const [categories, setCategories] = useState([]);
+  const [signatureConfig, setSignatureConfig] = useState({});
   const [hero, setHero] = useState(null);
   const [banners, setBanners] = useState([]);
   const [merchandising, setMerchandising] = useState({
@@ -32,20 +34,17 @@ function Home() {
     let isMounted = true;
     async function loadHomePageData() {
       try {
-        const [catRes, heroRes, bannersRes, merchRes] = await Promise.allSettled([
-          storefrontApi.getCategories({
-            limit: 6,
-            sortBy: "sortOrder",
-            sortOrder: "asc",
-          }),
+        const [sigRes, heroRes, bannersRes, merchRes] = await Promise.allSettled([
+          storefrontApi.getSignatureCollections(),
           storefrontApi.getHero(),
           storefrontApi.getBanners({ position: "ALL" }),
           storefrontApi.getMerchandising({ limit: 8 }),
         ]);
 
         if (isMounted) {
-          if (catRes.status === "fulfilled" && catRes.value?.data) {
-            setCategories(catRes.value.data);
+          if (sigRes.status === "fulfilled" && sigRes.value?.data) {
+            setCategories(sigRes.value.data.categories || []);
+            setSignatureConfig(sigRes.value.data.configuration || {});
           }
           if (heroRes.status === "fulfilled" && heroRes.value?.data) {
             setHero(heroRes.value.data);
@@ -327,63 +326,10 @@ function Home() {
               <div className="heading-line"></div>
             </div>
 
-            <div className="signature-grid">
-              {loading ? (
-                // Skeleton placeholders
-                Array.from({ length: 6 }).map((_, idx) => (
-                  <div key={idx} className="signature-card animate-pulse">
-                    <div className="signature-image bg-[#e5ddd2]" />
-                    <div className="signature-info">
-                      <div className="mx-auto h-4 w-20 bg-[#e5ddd2] rounded" />
-                    </div>
-                  </div>
-                ))
-              ) : categories.length > 0 ? (
-                categories.map((category) => {
-                  const imageUrl =
-                    category.mediaAsset?.url ||
-                    category.image ||
-                    null;
-
-                  return (
-                    <Link
-                      to={`/category/${category.slug}`}
-                      className="signature-card"
-                      key={category.id || category.slug}
-                    >
-                      <div className="signature-image">
-                        {imageUrl ? (
-                          <img
-                            src={imageUrl}
-                            alt={category.name}
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="h-full w-full bg-[#f4ece0] border border-[#e2d5c3] flex flex-col items-center justify-center p-3 text-center">
-                            <Sparkles size={22} className="text-[#b99657] mb-1.5" />
-                            <span className="font-serif text-[11px] font-medium text-[#2d2924] tracking-wider uppercase line-clamp-1">
-                              {category.name}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="signature-info">
-                        <h3>{category.name}</h3>
-                        <span>
-                          EXPLORE
-                          <ArrowRight size={14} />
-                        </span>
-                      </div>
-                    </Link>
-                  );
-                })
-              ) : (
-                <div className="col-span-full py-8 text-center text-sm text-[#8a8277]">
-                  No active categories available yet.
-                </div>
-              )}
-            </div>
+            <SignatureCollections
+              categories={categories}
+              configuration={signatureConfig}
+            />
           </div>
         </section>
 

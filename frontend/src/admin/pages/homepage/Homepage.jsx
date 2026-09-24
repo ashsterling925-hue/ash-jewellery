@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   Save,
   Image as ImageIcon,
@@ -16,8 +16,12 @@ import {
 import { cmsApi } from "@/lib/api/cmsApi";
 import { mediaApi } from "@/lib/api/mediaApi";
 import MediaPickerModal from "@/admin/components/MediaPickerModal";
+import SignatureCollectionsManager from "./SignatureCollectionsManager";
 
 export default function Homepage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "hero";
+
   const [slides, setSlides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -250,24 +254,18 @@ export default function Homepage() {
 
   return (
     <div className="space-y-6 w-full">
-      {/* Hidden File Input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleDirectUpload}
-      />
-
       {/* Top Header */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-[#e7dfd3] pb-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-[#e7dfd3] pb-4">
         <div>
           <h1 className="font-serif text-2xl font-medium tracking-wide text-[#1e1c19] sm:text-3xl">
-            Hero Showcase Photos (Non-Clickable)
+            Homepage Content Management
           </h1>
+          <p className="text-xs text-[#716b62] mt-0.5">
+            Configure storefront hero showcase and dynamic signature collections.
+          </p>
         </div>
 
-        {/* Link to Page 2: Clickable Banners */}
+        {/* Link to Clickable Banners */}
         <Link
           to="/admin/banners"
           className="inline-flex items-center gap-1.5 px-4 py-2 border border-[#b99657] bg-[#b99657]/10 text-[#b99657] hover:bg-[#b99657] hover:text-white transition-colors text-xs font-semibold uppercase tracking-wider self-start sm:self-auto"
@@ -277,8 +275,47 @@ export default function Homepage() {
         </Link>
       </div>
 
-      {/* Alerts */}
-      {successMsg && (
+      {/* Navigation Tabs */}
+      <div className="flex border-b border-[#e7dfd3] gap-2">
+        <button
+          type="button"
+          onClick={() => setSearchParams({ tab: "hero" })}
+          className={`px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer border-b-2 -mb-[1px] ${
+            activeTab === "hero"
+              ? "border-[#d28a25] text-[#d28a25] bg-white font-bold"
+              : "border-transparent text-[#716b62] hover:text-[#1e1c19]"
+          }`}
+        >
+          Hero Showcase Photos
+        </button>
+        <button
+          type="button"
+          onClick={() => setSearchParams({ tab: "collections" })}
+          className={`px-5 py-2.5 text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer border-b-2 -mb-[1px] ${
+            activeTab === "collections" || activeTab === "signature-collections"
+              ? "border-[#d28a25] text-[#d28a25] bg-white font-bold"
+              : "border-transparent text-[#716b62] hover:text-[#1e1c19]"
+          }`}
+        >
+          Signature Collections
+        </button>
+      </div>
+
+      {activeTab === "collections" || activeTab === "signature-collections" ? (
+        <SignatureCollectionsManager />
+      ) : (
+        <>
+          {/* Hidden File Input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleDirectUpload}
+          />
+
+          {/* Alerts */}
+          {successMsg && (
         <div className="flex items-center gap-2 rounded border border-[#52735b]/30 bg-[#52735b]/10 p-3 text-xs font-medium text-[#52735b]">
           <CheckCircle size={16} />
           {successMsg}
@@ -471,15 +508,17 @@ export default function Homepage() {
         )}
       </div>
 
-      {/* Media Picker Modal */}
-      <MediaPickerModal
-        isOpen={isMediaModalOpen}
-        onClose={() => {
-          setIsMediaModalOpen(false);
-          setTargetSlideIdx(null);
-        }}
-        onSelect={handleSelectFromMediaModal}
-      />
-    </div>
-  );
+        {/* Media Picker Modal */}
+        <MediaPickerModal
+          isOpen={isMediaModalOpen}
+          onClose={() => {
+            setIsMediaModalOpen(false);
+            setTargetSlideIdx(null);
+          }}
+          onSelect={handleSelectFromMediaModal}
+        />
+      </>
+    )}
+  </div>
+);
 }

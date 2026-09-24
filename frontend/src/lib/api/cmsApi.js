@@ -67,6 +67,18 @@ export const cmsApi = {
   async deleteSpecialOffer(id) {
     return api.delete(`/admin/special-offers/${id}`);
   },
+
+  // ==========================================
+  // 4. SIGNATURE COLLECTIONS
+  // ==========================================
+
+  async getAdminSignatureCollections() {
+    return api.get("/admin/signature-collections");
+  },
+
+  async saveSignatureCollections(data) {
+    return api.put("/admin/signature-collections", data);
+  },
 };
 
 export default cmsApi;

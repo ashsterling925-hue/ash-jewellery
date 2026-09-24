@@ -136,34 +136,34 @@ export default function Header({ onToggleMobileSidebar }) {
   const { section, title } = getRouteInfo();
 
   return (
-    <header className="sticky top-0 z-40 h-[68px] bg-[#fffdf9]/95 backdrop-blur-md border-b border-[#e7dfd3] px-6 lg:px-8 flex items-center justify-between transition-all">
+    <header className="sticky top-0 z-40 h-14 bg-[#fffdf9]/95 backdrop-blur-md border-b border-[#e7dfd3] px-5 lg:px-6 flex items-center justify-between transition-all">
       {/* LEFT: Mobile Menu Trigger + Breadcrumb / Title */}
-      <div className="flex items-center gap-3.5 min-w-0">
+      <div className="flex items-center gap-3 min-w-0">
         {/* Mobile Hamburger (Only visible on small/medium screens where sidebar is hidden) */}
         <button
           type="button"
           onClick={onToggleMobileSidebar}
           aria-label="Open sidebar menu"
-          className="lg:hidden flex items-center justify-center w-9 h-9 rounded-md border border-[#e7dfd3] bg-white text-[#716b62] hover:text-[#1e1c19] hover:border-[#b99657] transition-all cursor-pointer flex-shrink-0"
+          className="lg:hidden flex items-center justify-center w-8 h-8 rounded-md border border-[#e7dfd3] bg-white text-[#716b62] hover:text-[#1e1c19] hover:border-[#b99657] transition-all cursor-pointer flex-shrink-0"
         >
-          <Menu size={18} />
+          <Menu size={16} />
         </button>
 
         {/* Page Title & Breadcrumb Hierarchy */}
         <div className="flex flex-col text-left justify-center min-w-0">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#8c8273] uppercase tracking-wider leading-none">
+          <div className="flex items-center gap-1.5 text-[9px] font-bold text-[#8c8273] uppercase tracking-wider leading-none">
             <span className="text-[#a89f92]">Admin</span>
             <span className="text-[#d9cdbd]">/</span>
             <span className="text-[#b99657]">{section}</span>
           </div>
-          <h1 className="font-serif text-lg md:text-xl font-semibold text-[#1e1c19] tracking-tight leading-snug truncate mt-0.5">
+          <h1 className="font-serif text-base sm:text-lg font-semibold text-[#1e1c19] tracking-tight leading-tight truncate mt-0.5">
             {title}
           </h1>
         </div>
       </div>
 
       {/* RIGHT: Search + Notifications + User Profile */}
-      <div className="flex items-center gap-3.5 flex-shrink-0">
+      <div className="flex items-center gap-2.5 sm:gap-3 flex-shrink-0">
         {/* Search Bar */}
         <form
           onSubmit={handleSearchSubmit}

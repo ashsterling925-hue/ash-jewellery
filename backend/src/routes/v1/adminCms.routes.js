@@ -112,4 +112,18 @@ router.delete(
   adminCmsController.deleteSpecialOffer
 );
 
+// ==========================================
+// 4. SIGNATURE COLLECTIONS
+// ==========================================
+
+router.get(
+  "/signature-collections",
+  adminCmsController.getSignatureCollections
+);
+
+router.put(
+  "/signature-collections",
+  adminCmsController.saveSignatureCollections
+);
+
 export default router;
