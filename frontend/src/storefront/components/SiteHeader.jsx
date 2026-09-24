@@ -18,7 +18,18 @@ function SiteHeader() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState(() => {
+    const cached =
+      storefrontApi.getCachedSync("/storefront/categories", {
+        limit: 100,
+        sortBy: "sortOrder",
+        sortOrder: "asc",
+      }) ||
+      storefrontApi.getCachedSync("/storefront/categories") ||
+      storefrontApi.getCachedSync("/storefront/signature-collections")?.categories;
+
+    return Array.isArray(cached) ? cached : [];
+  });
   const [activeCategoryDropdown, setActiveCategoryDropdown] = useState(null);
   const [expandedMobileCat, setExpandedMobileCat] = useState(null);
 

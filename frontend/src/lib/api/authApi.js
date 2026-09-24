@@ -1,4 +1,4 @@
-import { api } from "./client.js";
+import { api, getRefreshToken } from "./client.js";
 
 /**
  * Authentication API Service
@@ -23,8 +23,9 @@ export const authApi = {
   /**
    * Logout session and clear HttpOnly cookie
    */
-  async logout() {
-    return api.post("/auth/logout", {});
+  async logout(data = {}) {
+    const token = data.refreshToken || getRefreshToken();
+    return api.post("/auth/logout", { refreshToken: token || undefined });
   },
 
   /**

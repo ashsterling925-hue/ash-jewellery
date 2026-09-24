@@ -4,17 +4,21 @@ import { api } from "./client.js";
 const clientCache = new Map();
 const pendingRequests = new Map();
 
-// Session storage helper for instant first paint across route switches and refreshes
+// LocalStorage & SessionStorage persistent cache for instant 0ms first paint
 function readStorageCache(key) {
   try {
-    if (typeof window === "undefined" || !window.sessionStorage) return null;
-    const raw = sessionStorage.getItem(`ash_sf_${key}`);
+    if (typeof window === "undefined") return null;
+    const storageKey = `ash_sf_${key}`;
+    const raw =
+      (window.localStorage && localStorage.getItem(storageKey)) ||
+      (window.sessionStorage && sessionStorage.getItem(storageKey));
     if (!raw) return null;
     const item = JSON.parse(raw);
     if (Date.now() < item.expiresAt) {
       return item.data;
     }
-    sessionStorage.removeItem(`ash_sf_${key}`);
+    if (window.localStorage) localStorage.removeItem(storageKey);
+    if (window.sessionStorage) sessionStorage.removeItem(storageKey);
   } catch {
     // ignore storage errors
   }
@@ -23,14 +27,14 @@ function readStorageCache(key) {
 
 function writeStorageCache(key, data, ttlMs) {
   try {
-    if (typeof window === "undefined" || !window.sessionStorage) return;
-    sessionStorage.setItem(
-      `ash_sf_${key}`,
-      JSON.stringify({
-        data,
-        expiresAt: Date.now() + ttlMs,
-      })
-    );
+    if (typeof window === "undefined") return;
+    const storageKey = `ash_sf_${key}`;
+    const serialized = JSON.stringify({
+      data,
+      expiresAt: Date.now() + ttlMs,
+    });
+    if (window.localStorage) localStorage.setItem(storageKey, serialized);
+    if (window.sessionStorage) sessionStorage.setItem(storageKey, serialized);
   } catch {
     // ignore storage quotas
   }
@@ -110,10 +114,10 @@ export const storefrontApi = {
   },
 
   /**
-   * Fetch active categories (cached for 2 mins)
+   * Fetch active categories (cached for 5 mins in localStorage)
    */
   async getCategories(params = {}) {
-    return cachedFetch("/storefront/categories", params, 120000);
+    return cachedFetch("/storefront/categories", params, 300000);
   },
 
   /**
@@ -193,10 +197,17 @@ export const storefrontApi = {
     clientCache.clear();
     pendingRequests.clear();
     try {
-      if (typeof window !== "undefined" && window.sessionStorage) {
-        Object.keys(sessionStorage).forEach((key) => {
-          if (key.startsWith("ash_sf_")) sessionStorage.removeItem(key);
-        });
+      if (typeof window !== "undefined") {
+        if (window.localStorage) {
+          Object.keys(localStorage).forEach((key) => {
+            if (key.startsWith("ash_sf_")) localStorage.removeItem(key);
+          });
+        }
+        if (window.sessionStorage) {
+          Object.keys(sessionStorage).forEach((key) => {
+            if (key.startsWith("ash_sf_")) sessionStorage.removeItem(key);
+          });
+        }
       }
     } catch {
       // ignore

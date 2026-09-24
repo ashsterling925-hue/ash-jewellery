@@ -127,6 +127,7 @@ export async function apiRequest(endpoint, options = {}) {
       response.status === 401 &&
       !_retry &&
       !cleanEndpoint.startsWith("auth/login") &&
+      !cleanEndpoint.startsWith("auth/logout") &&
       !cleanEndpoint.startsWith("auth/register")
     ) {
       // Use single in-flight promise to prevent concurrent refresh races

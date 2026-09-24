@@ -17,9 +17,10 @@ import {
   Settings,
   ChevronDown,
   X,
+  LogOut,
 } from "lucide-react";
 
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
 
@@ -190,7 +191,19 @@ function NavigationSection({
    ========================================================= */
 
 export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      if (onClose) onClose();
+      await logout();
+    } catch (err) {
+      console.warn("Logout error:", err);
+    } finally {
+      navigate("/login", { replace: true });
+    }
+  };
 
   const handleItemClick = () => {
     if (window.innerWidth < 1024) {
@@ -304,28 +317,33 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
             =================================================== */}
 
         <div className="sidebar-footer">
+          <div className="admin-profile flex items-center justify-between w-full">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="profile-avatar flex-shrink-0">
+                {user?.name ? user.name[0].toUpperCase() : "A"}
+              </div>
 
-          <div className="admin-profile">
-
-            <div className="profile-avatar">
-              {user?.name ? user.name[0].toUpperCase() : "A"}
+              <div className="profile-info min-w-0">
+                <strong className="truncate block">
+                  {user?.name || "Admin"}
+                </strong>
+                <span className="truncate block">
+                  {user?.role ? user.role.replace("_", " ") : "Administrator"}
+                </span>
+              </div>
             </div>
 
-
-            <div className="profile-info">
-
-              <strong>
-                {user?.name || "Admin"}
-              </strong>
-
-              <span>
-                {user?.role ? user.role.replace("_", " ") : "Administrator"}
-              </span>
-
-            </div>
-
+            {/* Direct Sign Out Action */}
+            <button
+              type="button"
+              onClick={handleLogout}
+              title="Sign Out"
+              aria-label="Sign Out"
+              className="p-1.5 text-stone-400 hover:text-red-400 hover:bg-stone-800/60 rounded-md transition-colors cursor-pointer flex-shrink-0"
+            >
+              <LogOut size={16} />
+            </button>
           </div>
-
         </div>
 
       </aside>

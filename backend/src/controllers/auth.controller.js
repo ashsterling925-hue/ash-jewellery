@@ -67,14 +67,29 @@ export const authController = {
     try {
       const rawRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
       const ipAddress = req.ip || req.headers["x-forwarded-for"] || null;
-      const userId = req.user?.id || null;
+      let userId = req.user?.id || null;
+
+      if (!userId && req.headers.authorization?.startsWith("Bearer ")) {
+        try {
+          const token = req.headers.authorization.substring(7).trim();
+          const decoded = tokenService.verifyAccessToken(token);
+          if (decoded?.userId) userId = decoded.userId;
+        } catch {
+          // Token may be expired, continue with rawRefreshToken
+        }
+      }
 
       await authService.logout({ rawRefreshToken, userId, ipAddress });
 
-      // Clear refresh token cookie
+      // Robustly clear refresh token cookie across all browser variants
       res.clearCookie("refreshToken", {
-        ...tokenService.getCookieOptions(),
+        path: "/",
+        httpOnly: true,
+      });
+      res.cookie("refreshToken", "", {
         maxAge: 0,
+        path: "/",
+        httpOnly: true,
       });
 
       return sendSuccess(res, {

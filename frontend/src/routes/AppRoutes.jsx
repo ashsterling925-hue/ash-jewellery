@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
 // Storefront pages
@@ -21,12 +21,20 @@ import ProtectedRoute from "@/routes/ProtectedRoute";
  */
 function StorefrontGuard() {
   const { user, isAuthenticated, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return null;
   }
 
-  if (isAuthenticated && user?.role) {
+  const isAuthPage = [
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/reset-password",
+  ].some((path) => location.pathname.startsWith(path));
+
+  if (!isAuthPage && isAuthenticated && user?.role) {
     const role = user.role.toUpperCase();
     if (role === "SUPER_ADMIN" || role === "ADMIN" || role === "STAFF") {
       return <Navigate to="/admin/dashboard" replace />;
@@ -74,6 +82,12 @@ export default function AppRoutes() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          {/* Public Auth Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+
           {/* Storefront Routes (Blocked for logged-in Admin/Staff users) */}
           <Route element={<StorefrontGuard />}>
             <Route path="/" element={<HomePage />} />
@@ -86,10 +100,6 @@ export default function AppRoutes() {
             <Route path="/collection/:collectionSlug" element={<CataloguePage />} />
             <Route path="/search" element={<CataloguePage />} />
             <Route path="/bangles" element={<CataloguePage forcedCategorySlug="bangles" />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/register" element={<RegisterPage />} />
           </Route>
 
           {/* Admin Routes (Protected) */}

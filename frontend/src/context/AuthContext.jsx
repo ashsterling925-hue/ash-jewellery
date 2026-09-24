@@ -78,8 +78,17 @@ export function AuthProvider({ children }) {
         }
       }
 
-      // 2. Try refreshing token session
+      // 2. Try refreshing token session ONLY if stored user or refresh token exists
       const storedRefresh = getRefreshToken();
+      if (!storedUser && !storedRefresh) {
+        setUser(null);
+        setAccessToken(null);
+        setRefreshToken(null);
+        localStorage.removeItem("ash_user");
+        setLoading(false);
+        return;
+      }
+
       const res = await authApi.refresh({ refreshToken: storedRefresh || undefined });
       if (res?.data?.accessToken && res?.data?.user) {
         setAccessToken(res.data.accessToken);
@@ -88,7 +97,7 @@ export function AuthProvider({ children }) {
         }
         setUser(res.data.user);
         localStorage.setItem("ash_user", JSON.stringify(res.data.user));
-      } else if (!storedUser) {
+      } else {
         setUser(null);
         setAccessToken(null);
         setRefreshToken(null);
@@ -96,14 +105,10 @@ export function AuthProvider({ children }) {
       }
     } catch (err) {
       console.warn("Auth check failed:", err?.message);
-      // Only wipe user if we didn't have a valid active session
-      const storedUser = getStoredUser();
-      if (!storedUser) {
-        setUser(null);
-        setAccessToken(null);
-        setRefreshToken(null);
-        localStorage.removeItem("ash_user");
-      }
+      setUser(null);
+      setAccessToken(null);
+      setRefreshToken(null);
+      localStorage.removeItem("ash_user");
     } finally {
       setLoading(false);
     }
@@ -131,7 +136,8 @@ export function AuthProvider({ children }) {
   // Logout handler
   const logout = async () => {
     try {
-      await authApi.logout();
+      const refreshToken = getRefreshToken();
+      await authApi.logout({ refreshToken });
     } catch (err) {
       console.warn("Logout notice:", err);
     } finally {
@@ -139,6 +145,8 @@ export function AuthProvider({ children }) {
       setRefreshToken(null);
       setUser(null);
       localStorage.removeItem("ash_user");
+      localStorage.removeItem("ash_access_token");
+      localStorage.removeItem("ash_refresh_token");
     }
   };
 

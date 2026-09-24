@@ -30,9 +30,14 @@ export default function Header({ onToggleMobileSidebar }) {
   }, []);
 
   const handleLogout = async () => {
-    setUserMenuOpen(false);
-    await logout();
-    navigate("/login", { replace: true });
+    try {
+      setUserMenuOpen(false);
+      await logout();
+    } catch (err) {
+      console.warn("Logout error:", err);
+    } finally {
+      navigate("/login", { replace: true });
+    }
   };
 
   const handleSearchSubmit = (e) => {
