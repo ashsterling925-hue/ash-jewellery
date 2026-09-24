@@ -1,0 +1,8 @@
+-- AlterTable Tag
+ALTER TABLE "Tag" ADD COLUMN IF NOT EXISTS "sortOrder" INTEGER NOT NULL DEFAULT 0;
+
+-- CreateIndex
+CREATE INDEX IF NOT EXISTS "Tag_sortOrder_idx" ON "Tag"("sortOrder");
+
+-- AlterTable ProductTag
+ALTER TABLE "ProductTag" ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
