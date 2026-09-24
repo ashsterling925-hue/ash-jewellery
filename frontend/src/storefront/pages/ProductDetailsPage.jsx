@@ -9,17 +9,28 @@ export default function ProductDetailsPage() {
   const { slug } = useParams();
   const targetSlug = slug || "heritage-silver-bangle";
 
-  const [product, setProduct] = useState(null);
-  const [selectedImage, setSelectedImage] = useState("");
+  const cachedProduct = storefrontApi.getCachedSync(`/storefront/products/${targetSlug}`);
+  const [product, setProduct] = useState(cachedProduct);
+  const [selectedImage, setSelectedImage] = useState(() => {
+    if (!cachedProduct) return "";
+    return (
+      cachedProduct.images?.find((img) => img.isPrimary)?.url ||
+      cachedProduct.images?.[0]?.url ||
+      cachedProduct.image ||
+      ""
+    );
+  });
   const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!cachedProduct);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
     async function loadProduct() {
-      setLoading(true);
+      if (!product) {
+        setLoading(true);
+      }
       setError(null);
       try {
         let res;
@@ -48,21 +59,24 @@ export default function ProductDetailsPage() {
             prod.image ||
             null;
           setSelectedImage(primary);
+          setLoading(false); // Unblock immediately upon product data
 
-          // Fetch related products for "YOU MAY ALSO LIKE"
-          try {
-            const relRes = await storefrontApi.getProducts({
-              categorySlug: prod.category?.slug,
-              limit: 6,
-            });
-            if (relRes?.data) {
-              const filtered = relRes.data
-                .filter((p) => p.id !== prod.id)
-                .slice(0, 4);
-              setRelatedProducts(filtered);
-            }
-          } catch {
-            // ignore related error
+          // Fetch related products for "YOU MAY ALSO LIKE" asynchronously (non-blocking)
+          if (prod.category?.slug) {
+            storefrontApi
+              .getProducts({
+                categorySlug: prod.category.slug,
+                limit: 6,
+              })
+              .then((relRes) => {
+                if (isMounted && relRes?.data) {
+                  const filtered = relRes.data
+                    .filter((p) => p.id !== prod.id)
+                    .slice(0, 4);
+                  setRelatedProducts(filtered);
+                }
+              })
+              .catch(() => {});
           }
         }
       } catch (err) {

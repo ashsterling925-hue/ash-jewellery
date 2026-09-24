@@ -17,52 +17,94 @@ import HomeSkeleton from "@/storefront/components/HomeSkeleton";
 import SignatureCollections from "@/storefront/components/SignatureCollections";
 import { storefrontApi } from "@/lib/api/storefrontApi";
 
+const DEFAULT_HERO_IMAGE =
+  "https://ash-jewellery-media.s3.ap-south-1.amazonaws.com/jewellery/2473b21d-5ccf-431d-9e50-e1e799fa0bbd-IMG_7688-PNG.png";
+
 function Home() {
-  const [categories, setCategories] = useState([]);
-  const [signatureConfig, setSignatureConfig] = useState({});
-  const [hero, setHero] = useState(null);
-  const [banners, setBanners] = useState([]);
-  const [merchandising, setMerchandising] = useState({
-    bestSellers: [],
-    newArrivals: [],
-    featured: [],
-    trending: [],
+  const [categories, setCategories] = useState(() => {
+    const cached = storefrontApi.getCachedSync("/storefront/signature-collections");
+    return cached?.categories || [];
   });
-  const [loading, setLoading] = useState(true);
+  const [signatureConfig, setSignatureConfig] = useState(() => {
+    const cached = storefrontApi.getCachedSync("/storefront/signature-collections");
+    return cached?.configuration || {};
+  });
+  const [hero, setHero] = useState(() => {
+    const cached = storefrontApi.getCachedSync("/storefront/hero");
+    if (cached && (cached.slides?.length > 0 || cached.mediaAsset?.url)) return cached;
+    return {
+      slides: [
+        {
+          id: "active-initial-hero",
+          url: DEFAULT_HERO_IMAGE,
+          altText: "ASH Jewellery - 925 Pure Silver",
+          sortOrder: 1,
+        },
+      ],
+    };
+  });
+  const [banners, setBanners] = useState(() => {
+    return storefrontApi.getCachedSync("/storefront/banners") || [];
+  });
+  const [merchandising, setMerchandising] = useState(() => {
+    return (
+      storefrontApi.getCachedSync("/storefront/merchandising") || {
+        bestSellers: [],
+        newArrivals: [],
+        featured: [],
+        trending: [],
+      }
+    );
+  });
+  const [loadingCategories, setLoadingCategories] = useState(() => {
+    const cached = storefrontApi.getCachedSync("/storefront/signature-collections");
+    return !(cached?.categories?.length > 0);
+  });
 
   useEffect(() => {
     let isMounted = true;
-    async function loadHomePageData() {
-      try {
-        const [sigRes, heroRes, bannersRes, merchRes] = await Promise.allSettled([
-          storefrontApi.getSignatureCollections(),
-          storefrontApi.getHero(),
-          storefrontApi.getBanners({ position: "ALL" }),
-          storefrontApi.getMerchandising({ limit: 8 }),
-        ]);
 
-        if (isMounted) {
-          if (sigRes.status === "fulfilled" && sigRes.value?.data) {
-            setCategories(sigRes.value.data.categories || []);
-            setSignatureConfig(sigRes.value.data.configuration || {});
-          }
-          if (heroRes.status === "fulfilled" && heroRes.value?.data) {
-            setHero(heroRes.value.data);
-          }
-          if (bannersRes.status === "fulfilled" && bannersRes.value?.data) {
-            setBanners(bannersRes.value.data);
-          }
-          if (merchRes.status === "fulfilled" && merchRes.value?.data) {
-            setMerchandising(merchRes.value.data);
-          }
+    // Load components in parallel without blocking above-the-fold content
+    storefrontApi
+      .getSignatureCollections()
+      .then((res) => {
+        if (isMounted && res?.data) {
+          setCategories(res.data.categories || []);
+          setSignatureConfig(res.data.configuration || {});
+          setLoadingCategories(false);
         }
-      } catch (err) {
-        console.error("Failed to load storefront homepage data:", err);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    }
-    loadHomePageData();
+      })
+      .catch(() => {
+        if (isMounted) setLoadingCategories(false);
+      });
+
+    storefrontApi
+      .getHero()
+      .then((res) => {
+        if (isMounted && res?.data) {
+          setHero(res.data);
+        }
+      })
+      .catch(console.error);
+
+    storefrontApi
+      .getBanners({ position: "ALL" })
+      .then((res) => {
+        if (isMounted && res?.data) {
+          setBanners(res.data);
+        }
+      })
+      .catch(console.error);
+
+    storefrontApi
+      .getMerchandising({ limit: 8 })
+      .then((res) => {
+        if (isMounted && res?.data) {
+          setMerchandising(res.data);
+        }
+      })
+      .catch(console.error);
+
     return () => {
       isMounted = false;
     };
@@ -120,12 +162,12 @@ function Home() {
     if (slides.length === 0) {
       slides.push({
         id: "fallback-hero",
-        isFallback: true,
-        image: null,
-        alt: "ASH Jewellery",
+        isFallback: false,
+        image: DEFAULT_HERO_IMAGE,
+        alt: "ASH Jewellery - 925 Pure Silver",
         sortOrder: 1,
-        isClickable: false,
-        targetUrl: null,
+        isClickable: true,
+        targetUrl: "/category",
       });
     }
 
@@ -152,16 +194,6 @@ function Home() {
   const handleNextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
   };
-
-  if (loading) {
-    return (
-      <div className="home-page">
-        <SiteHeader />
-        <HomeSkeleton />
-        <SiteFooter />
-      </div>
-    );
-  }
 
   return (
     <div className="home-page">
@@ -329,6 +361,7 @@ function Home() {
             <SignatureCollections
               categories={categories}
               configuration={signatureConfig}
+              loading={loadingCategories}
             />
           </div>
         </section>

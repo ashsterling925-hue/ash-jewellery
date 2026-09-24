@@ -1,4 +1,4 @@
-import { productRepository } from "../repositories/product.repository.js";
+import { productRepository, PRODUCT_CARD_INCLUDE } from "../repositories/product.repository.js";
 import { categoryRepository } from "../repositories/category.repository.js";
 import { subcategoryRepository } from "../repositories/subcategory.repository.js";
 import { collectionRepository } from "../repositories/collection.repository.js";
@@ -9,6 +9,7 @@ import { slugify } from "./category.service.js";
 import { ApiError } from "../utils/apiError.js";
 import { getPaginationParams, formatPaginationMeta } from "../utils/pagination.js";
 import { getSortParams, getSearchFilter } from "../utils/queryHelper.js";
+import { memoryCache } from "../utils/cache.js";
 
 const ALLOWED_SORT_FIELDS = [
   "name",
@@ -446,12 +447,15 @@ export const productService = {
 
     const where = whereConditions.length > 0 ? { AND: whereConditions } : {};
 
+    const include = query.cardOnly ? PRODUCT_CARD_INCLUDE : undefined;
+
     const [products, total] = await Promise.all([
       productRepository.findMany({
         where,
         orderBy,
         skip,
         take: limit,
+        ...(include && { include }),
       }),
       productRepository.count(where),
     ]);
@@ -465,13 +469,10 @@ export const productService = {
   },
 
   /**
-   * Get single product by ID or Slug
+   * Get single product by ID or Slug in a single roundtrip query
    */
   async getProductById(idOrSlug) {
-    let product = await productRepository.findById(idOrSlug);
-    if (!product) {
-      product = await productRepository.findBySlug(idOrSlug);
-    }
+    const product = await productRepository.findByIdOrSlug(idOrSlug);
     if (!product) {
       throw ApiError.notFound(`Product "${idOrSlug}" was not found.`);
     }
@@ -604,6 +605,8 @@ export const productService = {
       attributeAssignments,
       tagIds
     );
+
+    memoryCache.flushStorefront();
 
     return formatProductResponse(created);
   },
@@ -806,6 +809,8 @@ export const productService = {
       resolvedTagIds
     );
 
+    memoryCache.flushStorefront();
+
     return formatProductResponse(updated);
   },
 
@@ -819,6 +824,8 @@ export const productService = {
     }
 
     await productRepository.delete(id);
+
+    memoryCache.flushStorefront();
 
     return {
       message: `Product "${product.name}" (SKU: ${product.sku}) was successfully deleted.`,
@@ -846,6 +853,7 @@ export const productService = {
         },
         orderBy,
         take,
+        include: PRODUCT_CARD_INCLUDE,
       }),
       productRepository.findMany({
         where: {
@@ -858,6 +866,7 @@ export const productService = {
         },
         orderBy,
         take,
+        include: PRODUCT_CARD_INCLUDE,
       }),
       productRepository.findMany({
         where: {
@@ -866,6 +875,7 @@ export const productService = {
         },
         orderBy,
         take,
+        include: PRODUCT_CARD_INCLUDE,
       }),
       productRepository.findMany({
         where: {
@@ -874,6 +884,7 @@ export const productService = {
         },
         orderBy,
         take,
+        include: PRODUCT_CARD_INCLUDE,
       }),
     ]);
 

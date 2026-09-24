@@ -2,6 +2,7 @@ import { prisma } from "../config/prisma.js";
 import { heroRepository } from "../repositories/hero.repository.js";
 import { mediaRepository } from "../repositories/media.repository.js";
 import { ApiError } from "../utils/apiError.js";
+import { memoryCache } from "../utils/cache.js";
 
 export const heroService = {
   /**
@@ -131,6 +132,8 @@ export const heroService = {
           });
         }
       }
+
+      memoryCache.flushPrefix("storefront:hero");
 
       return {
         id: section.id,

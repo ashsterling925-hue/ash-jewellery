@@ -1,6 +1,6 @@
 import { prisma } from "../config/prisma.js";
 
-const DEFAULT_PRODUCT_INCLUDE = {
+export const DEFAULT_PRODUCT_INCLUDE = {
   category: {
     select: {
       id: true,
@@ -75,6 +75,32 @@ const DEFAULT_PRODUCT_INCLUDE = {
 };
 
 /**
+ * Lean include for product cards, storefront catalogue grids, and merchandising.
+ * Skips heavy nested attributes, attributeValues, and tags to drastically optimize query latency and payload size.
+ */
+export const PRODUCT_CARD_INCLUDE = {
+  category: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+    },
+  },
+  images: {
+    orderBy: {
+      sortOrder: "asc",
+    },
+    select: {
+      id: true,
+      url: true,
+      altText: true,
+      isPrimary: true,
+      sortOrder: true,
+    },
+  },
+};
+
+/**
  * Product Repository
  * Encapsulates database operations for Product, ProductImage, and ProductAttributeValue via Prisma
  */
@@ -131,6 +157,23 @@ export const productRepository = {
   async findBySlug(slug, include = DEFAULT_PRODUCT_INCLUDE) {
     return prisma.product.findUnique({
       where: { slug: slug.trim() },
+      include,
+    });
+  },
+
+  /**
+   * Find product by either unique ID or unique slug in a single roundtrip query
+   */
+  async findByIdOrSlug(idOrSlug, include = DEFAULT_PRODUCT_INCLUDE) {
+    if (!idOrSlug) return null;
+    const clean = String(idOrSlug).trim();
+    return prisma.product.findFirst({
+      where: {
+        OR: [
+          { slug: clean },
+          { id: clean },
+        ],
+      },
       include,
     });
   },

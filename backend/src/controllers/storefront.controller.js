@@ -31,6 +31,7 @@ export const storefrontController = {
       const { products, pagination } = await productService.getProducts({
         ...req.query,
         status: "PUBLISHED",
+        cardOnly: req.query.full !== "true",
       });
 
       const responsePayload = {
@@ -39,7 +40,7 @@ export const storefrontController = {
         pagination,
       };
 
-      memoryCache.set(cacheKey, responsePayload, 30); // 30s cache
+      memoryCache.set(cacheKey, responsePayload, 60); // 60s cache
 
       return sendPaginated(res, responsePayload);
     } catch (error) {
@@ -53,17 +54,28 @@ export const storefrontController = {
    */
   async getProductBySlug(req, res, next) {
     try {
-      const product = await productService.getProductById(req.params.slug);
+      const slug = req.params.slug;
+      const cacheKey = `storefront:product:${slug}`;
+      const cached = memoryCache.get(cacheKey);
+      if (cached) {
+        return sendSuccess(res, cached);
+      }
+
+      const product = await productService.getProductById(slug);
 
       // Verify product is PUBLISHED
       if (product.status !== "PUBLISHED") {
-        throw ApiError.notFound(`Product "${req.params.slug}" was not found.`);
+        throw ApiError.notFound(`Product "${slug}" was not found.`);
       }
 
-      return sendSuccess(res, {
+      const responsePayload = {
         message: "Storefront product details fetched successfully",
         data: product,
-      });
+      };
+
+      memoryCache.set(cacheKey, responsePayload, 120); // 120s cache
+
+      return sendSuccess(res, responsePayload);
     } catch (error) {
       next(error);
     }
@@ -332,52 +344,6 @@ export const storefrontController = {
     }
   },
 
-  /**
-   * GET /api/v1/storefront/merchandising
-   * GET /api/v1/storefront/homepage/merchandising
-   * Get dynamic homepage merchandising sections (Best Sellers, New Arrivals, Featured, Trending)
-   */
-  async getHomepageMerchandising(req, res, next) {
-    try {
-      const limit = parseInt(req.query.limit, 10) || 8;
-      const data = await productService.getHomepageMerchandising(limit);
-
-      const section = req.query.section?.toLowerCase();
-      if (section) {
-        if (section === "bestsellers" || section === "best-sellers") {
-          return sendSuccess(res, {
-            message: "Best sellers fetched successfully",
-            data: data.bestSellers,
-          });
-        }
-        if (section === "new-arrivals" || section === "newarrivals") {
-          return sendSuccess(res, {
-            message: "New arrivals fetched successfully",
-            data: data.newArrivals,
-          });
-        }
-        if (section === "featured") {
-          return sendSuccess(res, {
-            message: "Featured products fetched successfully",
-            data: data.featured,
-          });
-        }
-        if (section === "trending") {
-          return sendSuccess(res, {
-            message: "Trending products fetched successfully",
-            data: data.trending,
-          });
-        }
-      }
-
-      return sendSuccess(res, {
-        message: "Homepage merchandising products fetched successfully",
-        data,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
 
   /**
    * GET /api/v1/storefront/signature-collections

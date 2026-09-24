@@ -78,7 +78,7 @@ function SignatureCard({ category, variant = "grid", className = "" }) {
  * - 4 Categories: 1 Featured Large + 1 Wide + 2 Small cards
  * - 5+ Categories: Featured 4-card showcase + 4-column card grid below
  */
-export default function SignatureCollections({ categories = [], configuration = {} }) {
+export default function SignatureCollections({ categories = [], configuration = {}, loading = false }) {
   const activeCount = categories.length;
 
   const layoutData = useMemo(() => {
@@ -118,6 +118,19 @@ export default function SignatureCollections({ categories = [], configuration = 
       extra,
     };
   }, [categories, configuration, activeCount]);
+
+  if (loading && activeCount === 0) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 w-full">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="aspect-[4/5] bg-gradient-to-br from-[#f8f5ef] to-[#ede3d4] border border-[#e8ded2] rounded-xs animate-pulse"
+          />
+        ))}
+      </div>
+    );
+  }
 
   if (layoutData.type === "EMPTY") {
     return (
