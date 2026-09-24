@@ -270,12 +270,10 @@ export default function AddProduct() {
       <div className="add-product-header">
         <div>
           <Link to="/admin/products" className="back-link">
-            <ArrowLeft size={16} />
+            <ArrowLeft size={14} />
             Back to Products
           </Link>
-          <p className="eyebrow">CATALOGUE / PRODUCTS</p>
           <h1>Add Product</h1>
-          <p>Create a new jewellery product for the ASH Jewellery catalogue.</p>
         </div>
 
         <div className="add-product-actions">

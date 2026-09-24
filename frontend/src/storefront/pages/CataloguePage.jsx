@@ -812,14 +812,14 @@ export default function CataloguePage({ forcedCategorySlug }) {
             {/* Products Grid Column */}
             <div className="lg:col-span-3">
               {loading ? (
-                // Skeletons
+                // Luxury Shimmer Skeletons
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6">
                   {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="animate-pulse">
-                      <div className="aspect-[0.88/1] bg-[#eee6da]" />
-                      <div className="mt-3 h-3 w-16 bg-[#eee6da] mx-auto" />
-                      <div className="mt-2 h-4 w-28 bg-[#eee6da] mx-auto" />
-                      <div className="mt-2 h-3 w-12 bg-[#eee6da] mx-auto" />
+                    <div key={i} className="border border-[#e7dfd3] bg-[#fffdf9] p-3 flex flex-col gap-2.5">
+                      <div className="aspect-[0.88/1] w-full luxury-shimmer" />
+                      <div className="mt-1 h-3 w-16 luxury-shimmer-subtle mx-auto rounded-xs" />
+                      <div className="h-4 w-32 luxury-shimmer-subtle mx-auto rounded-xs" />
+                      <div className="h-3.5 w-14 luxury-shimmer-subtle mx-auto rounded-xs" />
                     </div>
                   ))}
                 </div>

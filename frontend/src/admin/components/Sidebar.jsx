@@ -16,6 +16,7 @@ import {
   BarChart3,
   Settings,
   ChevronDown,
+  X,
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
@@ -117,12 +118,13 @@ const managementItems = [
    NAVIGATION ITEM
    ========================================================= */
 
-function NavigationItem({ item }) {
+function NavigationItem({ item, onItemClick }) {
   const Icon = item.icon;
 
   return (
     <NavLink
       to={item.path}
+      onClick={onItemClick}
       className={({ isActive }) =>
         `nav-item ${isActive ? "active" : ""}`
       }
@@ -147,6 +149,7 @@ function NavigationItem({ item }) {
 function NavigationSection({
   title,
   items,
+  onItemClick,
 }) {
   return (
     <div className="nav-section">
@@ -171,6 +174,7 @@ function NavigationSection({
           <NavigationItem
             key={item.path}
             item={item}
+            onItemClick={onItemClick}
           />
         ))}
 
@@ -185,125 +189,146 @@ function NavigationSection({
    SIDEBAR
    ========================================================= */
 
-export default function Sidebar() {
+export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
   const { user } = useAuth();
 
+  const handleItemClick = () => {
+    if (window.innerWidth < 1024) {
+      onClose();
+    }
+  };
+
   return (
-    <aside className="admin-sidebar">
+    <>
+      {/* Mobile Drawer Overlay Backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 lg:hidden cursor-pointer"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
 
-      {/* ===================================================
-          BRAND
-          =================================================== */}
+      <aside className={`admin-sidebar ${mobileOpen ? "mobile-drawer-open" : ""}`}>
 
-      <div className="sidebar-brand">
+        {/* ===================================================
+            BRAND
+            =================================================== */}
 
-        <div className="sidebar-brand-inner">
+        <div className="sidebar-brand relative">
 
-          {/* <div className="sidebar-brand-main">
-            ASH
+          <div className="sidebar-brand-inner">
+            <div className="sidebar-brand-subtitle">
+              ADMIN PANEL
+            </div>
           </div>
 
-          <div className="sidebar-brand-name">
-            JEWELLERY
-          </div> */}
-
-          <div className="sidebar-brand-subtitle">
-            ADMIN PANEL
-          </div>
-
-        </div>
-
-      </div>
-
-
-      {/* ===================================================
-          NAVIGATION
-          =================================================== */}
-
-      <nav className="sidebar-nav">
-
-        {/* Dashboard */}
-
-        <div className="dashboard-nav">
-
-          <NavLink
-            to="/admin/dashboard"
-            className={({ isActive }) =>
-              `nav-item dashboard-item ${
-                isActive ? "active" : ""
-              }`
-            }
+          {/* Close button on mobile drawer */}
+          <button
+            type="button"
+            onClick={onClose}
+            className="lg:hidden absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-white p-1 rounded transition-colors cursor-pointer"
+            aria-label="Close sidebar"
           >
-
-            <LayoutDashboard
-              size={16}
-              strokeWidth={1.7}
-            />
-
-            <span>
-              Dashboard
-            </span>
-
-          </NavLink>
+            <X size={18} />
+          </button>
 
         </div>
 
 
-        {/* Catalogue */}
+        {/* ===================================================
+            NAVIGATION
+            =================================================== */}
 
-        <NavigationSection
-          title="CATALOGUE"
-          items={catalogueItems}
-        />
+        <nav className="sidebar-nav">
 
+          {/* Dashboard */}
 
-        {/* Content */}
+          <div className="dashboard-nav">
 
-        <NavigationSection
-          title="CONTENT"
-          items={contentItems}
-        />
+            <NavLink
+              to="/admin/dashboard"
+              onClick={handleItemClick}
+              className={({ isActive }) =>
+                `nav-item dashboard-item ${
+                  isActive ? "active" : ""
+                }`
+              }
+            >
 
+              <LayoutDashboard
+                size={16}
+                strokeWidth={1.7}
+              />
 
-        {/* Management */}
+              <span>
+                Dashboard
+              </span>
 
-        <NavigationSection
-          title="MANAGEMENT"
-          items={managementItems}
-        />
+            </NavLink>
 
-      </nav>
-
-
-      {/* ===================================================
-          PROFILE
-          =================================================== */}
-
-      <div className="sidebar-footer">
-
-        <div className="admin-profile">
-
-          <div className="profile-avatar">
-            {user?.name ? user.name[0].toUpperCase() : "A"}
           </div>
 
 
-          <div className="profile-info">
+          {/* Catalogue */}
 
-            <strong>
-              {user?.name || "Admin"}
-            </strong>
+          <NavigationSection
+            title="CATALOGUE"
+            items={catalogueItems}
+            onItemClick={handleItemClick}
+          />
 
-            <span>
-              {user?.role ? user.role.replace("_", " ") : "Administrator"}
-            </span>
+
+          {/* Content */}
+
+          <NavigationSection
+            title="CONTENT"
+            items={contentItems}
+            onItemClick={handleItemClick}
+          />
+
+
+          {/* Management */}
+
+          <NavigationSection
+            title="MANAGEMENT"
+            items={managementItems}
+            onItemClick={handleItemClick}
+          />
+
+        </nav>
+
+
+        {/* ===================================================
+            PROFILE
+            =================================================== */}
+
+        <div className="sidebar-footer">
+
+          <div className="admin-profile">
+
+            <div className="profile-avatar">
+              {user?.name ? user.name[0].toUpperCase() : "A"}
+            </div>
+
+
+            <div className="profile-info">
+
+              <strong>
+                {user?.name || "Admin"}
+              </strong>
+
+              <span>
+                {user?.role ? user.role.replace("_", " ") : "Administrator"}
+              </span>
+
+            </div>
 
           </div>
 
         </div>
 
-      </div>
-
-    </aside>
+      </aside>
+    </>
   );
 }

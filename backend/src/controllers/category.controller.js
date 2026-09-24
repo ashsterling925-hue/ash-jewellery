@@ -1,5 +1,6 @@
 import { categoryService } from "../services/category.service.js";
 import { sendSuccess, sendPaginated } from "../utils/apiResponse.js";
+import { memoryCache } from "../utils/cache.js";
 
 /**
  * Category Controller
@@ -43,6 +44,7 @@ export const categoryController = {
   async createCategory(req, res, next) {
     try {
       const category = await categoryService.createCategory(req.body);
+      memoryCache.flushPrefix("storefront:categories");
       return sendSuccess(res, {
         message: "Category created successfully",
         data: category,
@@ -59,6 +61,7 @@ export const categoryController = {
   async updateCategory(req, res, next) {
     try {
       const category = await categoryService.updateCategory(req.params.id, req.body);
+      memoryCache.flushPrefix("storefront:categories");
       return sendSuccess(res, {
         message: "Category updated successfully",
         data: category,
@@ -74,6 +77,7 @@ export const categoryController = {
   async deleteCategory(req, res, next) {
     try {
       const result = await categoryService.deleteCategory(req.params.id);
+      memoryCache.flushPrefix("storefront:categories");
       return sendSuccess(res, {
         message: result.message,
         data: result,

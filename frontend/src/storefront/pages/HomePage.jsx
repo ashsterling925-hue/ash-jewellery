@@ -13,8 +13,8 @@ import { useState, useEffect, useMemo } from "react";
 import SiteHeader from "@/storefront/components/SiteHeader";
 import SiteFooter from "@/storefront/components/SiteFooter";
 import ProductCard from "@/storefront/components/ProductCard";
+import HomeSkeleton from "@/storefront/components/HomeSkeleton";
 import { storefrontApi } from "@/lib/api/storefrontApi";
-
 
 function Home() {
   const [categories, setCategories] = useState([]);
@@ -153,6 +153,16 @@ function Home() {
   const handleNextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
   };
+
+  if (loading) {
+    return (
+      <div className="home-page">
+        <SiteHeader />
+        <HomeSkeleton />
+        <SiteFooter />
+      </div>
+    );
+  }
 
   return (
     <div className="home-page">

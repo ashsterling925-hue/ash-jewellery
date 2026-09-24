@@ -1,5 +1,6 @@
 import { productService } from "../services/product.service.js";
 import { sendSuccess, sendPaginated } from "../utils/apiResponse.js";
+import { memoryCache } from "../utils/cache.js";
 
 /**
  * Product Controller
@@ -46,6 +47,8 @@ export const productController = {
   async createProduct(req, res, next) {
     try {
       const product = await productService.createProduct(req.body);
+      memoryCache.flushPrefix("storefront:product");
+      memoryCache.flushPrefix("storefront:merchandising");
       return sendSuccess(res, {
         message: "Product created successfully",
         data: product,
@@ -63,6 +66,8 @@ export const productController = {
   async updateProduct(req, res, next) {
     try {
       const product = await productService.updateProduct(req.params.id, req.body);
+      memoryCache.flushPrefix("storefront:product");
+      memoryCache.flushPrefix("storefront:merchandising");
       return sendSuccess(res, {
         message: "Product updated successfully",
         data: product,
@@ -79,6 +84,8 @@ export const productController = {
   async deleteProduct(req, res, next) {
     try {
       const result = await productService.deleteProduct(req.params.id);
+      memoryCache.flushPrefix("storefront:product");
+      memoryCache.flushPrefix("storefront:merchandising");
       return sendSuccess(res, {
         message: result.message,
         data: result.product,

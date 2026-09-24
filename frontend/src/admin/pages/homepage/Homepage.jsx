@@ -21,6 +21,7 @@ export default function Homepage() {
   const [slides, setSlides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -56,6 +57,7 @@ export default function Homepage() {
           } else {
             setSlides([]);
           }
+          setIsDirty(false);
         }
       } catch (err) {
         console.error("Failed to load hero slides:", err);
@@ -109,7 +111,8 @@ export default function Homepage() {
             },
           ]);
         }
-        setSuccessMsg("Image uploaded successfully! Remember to save changes.");
+        setIsDirty(true);
+        setSuccessMsg("Image uploaded successfully! Click Save Changes to publish.");
         setTimeout(() => setSuccessMsg(""), 4000);
       }
     } catch (err) {
@@ -151,6 +154,7 @@ export default function Homepage() {
         },
       ]);
     }
+    setIsDirty(true);
     setIsMediaModalOpen(false);
     setTargetSlideIdx(null);
   };
@@ -172,6 +176,7 @@ export default function Homepage() {
 
     try {
       await cmsApi.saveHero({ slides: remainingSlides });
+      setIsDirty(false);
       setSuccessMsg("Photo deleted successfully!");
       setTimeout(() => setSuccessMsg(""), 3500);
     } catch (err) {
@@ -192,6 +197,7 @@ export default function Homepage() {
       next[index] = { ...next[index], sortOrder: isNaN(val) ? 0 : val };
       return next;
     });
+    setIsDirty(true);
   };
 
   // Move slide up
@@ -204,6 +210,7 @@ export default function Homepage() {
       next[index] = temp;
       return next.map((item, idx) => ({ ...item, sortOrder: idx + 1 }));
     });
+    setIsDirty(true);
   };
 
   // Move slide down
@@ -216,6 +223,7 @@ export default function Homepage() {
       next[index] = temp;
       return next.map((item, idx) => ({ ...item, sortOrder: idx + 1 }));
     });
+    setIsDirty(true);
   };
 
   // Save changes
@@ -229,6 +237,7 @@ export default function Homepage() {
       const sortedSlides = [...slides].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
       await cmsApi.saveHero({ slides: sortedSlides });
       setSlides(sortedSlides);
+      setIsDirty(false);
       setSuccessMsg("Hero slides saved successfully!");
       setTimeout(() => setSuccessMsg(""), 4000);
     } catch (err) {
@@ -240,7 +249,7 @@ export default function Homepage() {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 w-full">
       {/* Hidden File Input */}
       <input
         ref={fileInputRef}
@@ -253,15 +262,9 @@ export default function Homepage() {
       {/* Top Header */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-[#e7dfd3] pb-4">
         <div>
-          <p className="text-[10px] font-bold tracking-[0.25em] text-[#b99657] uppercase">
-            HOMEPAGE / HERO PHOTOS
-          </p>
           <h1 className="font-serif text-2xl font-medium tracking-wide text-[#1e1c19] sm:text-3xl">
             Hero Showcase Photos (Non-Clickable)
           </h1>
-          <p className="text-xs text-[#716b62] mt-0.5">
-            Add full-resolution photos for the hero slider. Non-clickable and displayed purely as designed with no text overlays.
-          </p>
         </div>
 
         {/* Link to Page 2: Clickable Banners */}
@@ -290,7 +293,7 @@ export default function Homepage() {
       )}
 
       {/* Main Content */}
-      <div className="border border-[#e7dfd3] bg-[#fffdf9] p-6 shadow-xs">
+      <div className="border border-[#e7dfd3] bg-[#fffdf9] p-6 shadow-xs w-full">
         {/* Actions Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 pb-5 mb-5 border-b border-[#eee5d8]">
           <div className="flex flex-wrap items-center gap-2.5">
@@ -320,17 +323,28 @@ export default function Homepage() {
             </button>
           </div>
 
-          {slides.length > 0 && (
-            <button
-              type="button"
-              onClick={handleSaveAll}
-              disabled={saving}
-              className="inline-flex items-center gap-1.5 bg-[#b99657] hover:bg-[#97753e] text-white px-5 py-2 text-xs font-semibold uppercase tracking-wider cursor-pointer transition-colors shadow-xs"
-            >
-              {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-              <span>Save Changes</span>
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleSaveAll}
+            disabled={!isDirty || saving}
+            className={`inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold uppercase tracking-wider transition-all border ${
+              !isDirty || saving
+                ? "bg-[#e8ded2]/60 text-[#8a7f72] border-[#d9cdbd] cursor-not-allowed opacity-60"
+                : "bg-[#b99657] hover:bg-[#97753e] text-white border-transparent cursor-pointer shadow-xs"
+            }`}
+          >
+            {saving ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                <span>Saving...</span>
+              </>
+            ) : (
+              <>
+                <Save size={14} />
+                <span>{!isDirty ? "Saved" : "Save Changes"}</span>
+              </>
+            )}
+          </button>
         </div>
 
         {/* Slides List */}
@@ -343,7 +357,7 @@ export default function Homepage() {
             {slides.map((slide, idx) => (
               <div
                 key={slide.id || idx}
-                className="flex flex-col sm:flex-row items-center gap-4 p-4 border border-[#e8ded2] bg-white rounded-none hover:border-[#b99657] transition-all"
+                className="flex flex-col sm:flex-row items-center gap-4 p-4 border border-[#e8ded2] bg-white rounded-none hover:border-[#b99657] transition-all w-full"
               >
                 {/* Thumbnail Preview */}
                 <div className="w-full sm:w-64 h-32 sm:h-28 bg-[#f5ede2] overflow-hidden border border-[#e2d5c3] flex-shrink-0 flex items-center justify-center">
@@ -433,19 +447,6 @@ export default function Homepage() {
                 </div>
               </div>
             ))}
-
-            {/* Bottom Save Button */}
-            <div className="pt-4 flex justify-end">
-              <button
-                type="button"
-                onClick={handleSaveAll}
-                disabled={saving}
-                className="inline-flex items-center gap-2 bg-[#211f1b] hover:bg-black text-white px-6 py-2.5 text-xs font-semibold uppercase tracking-wider cursor-pointer shadow-xs"
-              >
-                {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                <span>Save All Slides</span>
-              </button>
-            </div>
           </div>
         ) : (
           <div className="py-14 text-center text-xs text-[#716b62] border border-dashed border-[#d9cdbd] bg-[#fdfbf8] p-8">

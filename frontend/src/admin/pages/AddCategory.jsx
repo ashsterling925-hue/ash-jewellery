@@ -213,21 +213,17 @@ export default function AddCategory() {
       <section className="product-form-heading">
         <div>
           <Link to="/admin/categories" className="back-link">
-            <ArrowLeft size={15} />
+            <ArrowLeft size={14} />
             Back to Categories
           </Link>
 
-          <p className="eyebrow">CATALOGUE</p>
-
           <h1>Add Category</h1>
-
-          <p>Create a new jewellery catalogue category.</p>
         </div>
       </section>
 
       {/* API ERROR ALERT */}
       {apiError && (
-        <div style={{ padding: "14px 18px", color: "#a33d32", background: "#fdf2f2", borderRadius: "6px", marginBottom: "20px" }}>
+        <div style={{ padding: "12px 16px", color: "#a33d32", background: "#fdf2f2", borderRadius: "4px", marginBottom: "16px", fontSize: "13px" }}>
           <strong>Error: </strong> {apiError}
         </div>
       )}
@@ -243,10 +239,7 @@ export default function AddCategory() {
           {/* BASIC INFORMATION */}
           <section className="product-form-card">
             <div className="product-form-card-header">
-              <div>
-                <h3>Category Information</h3>
-                <p>Add the basic details for your category.</p>
-              </div>
+              <h3>Category Information</h3>
             </div>
 
             <div className="product-form-grid">
@@ -287,8 +280,6 @@ export default function AddCategory() {
                   className={errors.slug ? "input-error" : ""}
                 />
 
-                <small>Used in the category URL.</small>
-
                 {errors.slug && (
                   <small className="field-error">{errors.slug}</small>
                 )}
@@ -314,15 +305,11 @@ export default function AddCategory() {
 
                 <textarea
                   name="description"
-                  rows="5"
-                  placeholder="Describe this jewellery category..."
+                  rows="3"
+                  placeholder="Optional category description..."
                   value={formData.description}
                   onChange={handleChange}
                 />
-
-                <small>
-                  A short description helps organise and identify the category.
-                </small>
               </div>
             </div>
           </section>
@@ -330,10 +317,7 @@ export default function AddCategory() {
           {/* IMAGE */}
           <section className="product-form-card">
             <div className="product-form-card-header">
-              <div>
-                <h3>Category Image</h3>
-                <p>Add a visual image for this category.</p>
-              </div>
+              <h3>Category Image</h3>
             </div>
 
             {formData.image ? (
@@ -367,7 +351,7 @@ export default function AddCategory() {
                   disabled={uploadingImage}
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  {uploadingImage ? <Loader2 size={28} className="animate-spin" /> : <ImagePlus size={28} strokeWidth={1.4} />}
+                  {uploadingImage ? <Loader2 size={24} className="animate-spin" /> : <ImagePlus size={24} strokeWidth={1.5} />}
                   <strong>{uploadingImage ? "Uploading..." : "Upload Category Image"}</strong>
                   <span>JPG, PNG, WEBP, or SVG</span>
                 </button>
@@ -379,9 +363,9 @@ export default function AddCategory() {
                     padding: "8px 14px",
                     backgroundColor: "#292524",
                     border: "1px solid #44403c",
-                    borderRadius: "6px",
+                    borderRadius: "2px",
                     color: "#d4af37",
-                    fontSize: "13px",
+                    fontSize: "12px",
                     fontWeight: "600",
                     cursor: "pointer",
                     display: "flex",
@@ -390,7 +374,7 @@ export default function AddCategory() {
                     gap: "6px",
                   }}
                 >
-                  <ImageIcon size={15} /> Choose from Media Library
+                  <ImageIcon size={14} /> Choose from Media Library
                 </button>
               </div>
             )}
@@ -412,10 +396,7 @@ export default function AddCategory() {
           {/* PUBLISHING */}
           <section className="product-form-card">
             <div className="product-form-card-header">
-              <div>
-                <h3>Publishing</h3>
-                <p>Control category visibility.</p>
-              </div>
+              <h3>Publishing</h3>
             </div>
 
             <label className="publish-option">
@@ -428,7 +409,6 @@ export default function AddCategory() {
               />
               <div>
                 <strong>Active</strong>
-                <span>Category is visible and available.</span>
               </div>
             </label>
 
@@ -442,7 +422,6 @@ export default function AddCategory() {
               />
               <div>
                 <strong>Inactive</strong>
-                <span>Category is hidden from customers.</span>
               </div>
             </label>
           </section>

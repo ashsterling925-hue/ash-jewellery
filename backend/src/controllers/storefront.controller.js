@@ -8,6 +8,7 @@ import { bannerService } from "../services/banner.service.js";
 import { specialOfferService } from "../services/specialOffer.service.js";
 import { sendSuccess, sendPaginated } from "../utils/apiResponse.js";
 import { ApiError } from "../utils/apiError.js";
+import { memoryCache } from "../utils/cache.js";
 
 /**
  * Public Storefront Controller
@@ -20,16 +21,26 @@ export const storefrontController = {
    */
   async getProducts(req, res, next) {
     try {
+      const cacheKey = `storefront:products:${JSON.stringify(req.query)}`;
+      const cached = memoryCache.get(cacheKey);
+      if (cached) {
+        return sendPaginated(res, cached);
+      }
+
       const { products, pagination } = await productService.getProducts({
         ...req.query,
         status: "PUBLISHED",
       });
 
-      return sendPaginated(res, {
+      const responsePayload = {
         message: "Storefront products fetched successfully",
         data: products,
         pagination,
-      });
+      };
+
+      memoryCache.set(cacheKey, responsePayload, 30); // 30s cache
+
+      return sendPaginated(res, responsePayload);
     } catch (error) {
       next(error);
     }
@@ -64,32 +75,44 @@ export const storefrontController = {
   async getHomepageMerchandising(req, res, next) {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit, 10) : 8;
+      const section = req.query.section?.toLowerCase();
+      const cacheKey = `storefront:merchandising:${limit}:${section || "all"}`;
+      const cached = memoryCache.get(cacheKey);
+      if (cached) {
+        return sendSuccess(res, cached);
+      }
+
       const data = await productService.getHomepageMerchandising(limit);
 
       // Support optional section filter if client requests a single section
-      if (req.query.section) {
-        const sec = req.query.section.toLowerCase();
+      if (section) {
         let sectionData = [];
-        if (sec === "bestsellers" || sec === "best-sellers" || sec === "bestseller") {
+        if (section === "bestsellers" || section === "best-sellers" || section === "bestseller") {
           sectionData = data.bestSellers;
-        } else if (sec === "newarrivals" || sec === "new-arrivals" || sec === "newarrival") {
+        } else if (section === "newarrivals" || section === "new-arrivals" || section === "newarrival") {
           sectionData = data.newArrivals;
-        } else if (sec === "featured") {
+        } else if (section === "featured") {
           sectionData = data.featured;
-        } else if (sec === "trending") {
+        } else if (section === "trending") {
           sectionData = data.trending;
         }
 
-        return sendSuccess(res, {
+        const responsePayload = {
           message: `Homepage ${req.query.section} products fetched successfully`,
           data: sectionData,
-        });
+        };
+        memoryCache.set(cacheKey, responsePayload, 120);
+
+        return sendSuccess(res, responsePayload);
       }
 
-      return sendSuccess(res, {
+      const responsePayload = {
         message: "Homepage merchandising products fetched successfully",
         data,
-      });
+      };
+      memoryCache.set(cacheKey, responsePayload, 120);
+
+      return sendSuccess(res, responsePayload);
     } catch (error) {
       next(error);
     }
@@ -101,16 +124,25 @@ export const storefrontController = {
    */
   async getCategories(req, res, next) {
     try {
+      const cacheKey = `storefront:categories:${JSON.stringify(req.query)}`;
+      const cached = memoryCache.get(cacheKey);
+      if (cached) {
+        return sendPaginated(res, cached);
+      }
+
       const { categories, pagination } = await categoryService.getCategories({
         ...req.query,
         status: "Active",
       });
 
-      return sendPaginated(res, {
+      const responsePayload = {
         message: "Storefront categories fetched successfully",
         data: categories,
         pagination,
-      });
+      };
+      memoryCache.set(cacheKey, responsePayload, 120);
+
+      return sendPaginated(res, responsePayload);
     } catch (error) {
       next(error);
     }
@@ -206,6 +238,12 @@ export const storefrontController = {
    */
   async getFilterableAttributes(req, res, next) {
     try {
+      const cacheKey = "storefront:filters";
+      const cached = memoryCache.get(cacheKey);
+      if (cached) {
+        return sendSuccess(res, cached);
+      }
+
       const { attributes } = await attributeService.getAttributes({
         filterable: true,
         status: "Active",
@@ -214,10 +252,13 @@ export const storefrontController = {
         limit: 100,
       });
 
-      return sendSuccess(res, {
+      const responsePayload = {
         message: "Filterable attributes fetched successfully",
         data: attributes,
-      });
+      };
+      memoryCache.set(cacheKey, responsePayload, 300);
+
+      return sendSuccess(res, responsePayload);
     } catch (error) {
       next(error);
     }
@@ -229,11 +270,20 @@ export const storefrontController = {
    */
   async getHero(req, res, next) {
     try {
+      const cacheKey = "storefront:hero";
+      const cached = memoryCache.get(cacheKey);
+      if (cached) {
+        return sendSuccess(res, cached);
+      }
+
       const hero = await heroService.getStorefrontHero();
-      return sendSuccess(res, {
+      const responsePayload = {
         message: "Storefront hero fetched successfully",
         data: hero,
-      });
+      };
+      memoryCache.set(cacheKey, responsePayload, 180);
+
+      return sendSuccess(res, responsePayload);
     } catch (error) {
       next(error);
     }
@@ -246,11 +296,20 @@ export const storefrontController = {
   async getBanners(req, res, next) {
     try {
       const position = req.query.position || "HOME_PROMOTION";
+      const cacheKey = `storefront:banners:${position}`;
+      const cached = memoryCache.get(cacheKey);
+      if (cached) {
+        return sendSuccess(res, cached);
+      }
+
       const banners = await bannerService.getStorefrontBanners(position);
-      return sendSuccess(res, {
+      const responsePayload = {
         message: "Storefront banners fetched successfully",
         data: banners,
-      });
+      };
+      memoryCache.set(cacheKey, responsePayload, 180);
+
+      return sendSuccess(res, responsePayload);
     } catch (error) {
       next(error);
     }

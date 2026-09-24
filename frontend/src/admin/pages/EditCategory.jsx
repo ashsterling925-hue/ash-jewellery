@@ -307,21 +307,17 @@ export default function EditCategory() {
       <section className="product-form-heading">
         <div>
           <Link to="/admin/categories" className="back-link">
-            <ArrowLeft size={15} />
+            <ArrowLeft size={14} />
             Back to Categories
           </Link>
 
-          <p className="eyebrow">CATALOGUE</p>
-
           <h1>Edit Category</h1>
-
-          <p>Update category details, images and visibility.</p>
         </div>
       </section>
 
       {/* API ERROR ALERT */}
       {apiError && (
-        <div style={{ padding: "14px 18px", color: "#a33d32", background: "#fdf2f2", borderRadius: "6px", marginBottom: "20px" }}>
+        <div style={{ padding: "12px 16px", color: "#a33d32", background: "#fdf2f2", borderRadius: "4px", marginBottom: "16px", fontSize: "13px" }}>
           <strong>Error: </strong> {apiError}
         </div>
       )}
@@ -337,10 +333,7 @@ export default function EditCategory() {
           {/* BASIC INFORMATION */}
           <section className="product-form-card">
             <div className="product-form-card-header">
-              <div>
-                <h3>Category Information</h3>
-                <p>Update the core information for this category.</p>
-              </div>
+              <h3>Category Information</h3>
             </div>
 
             <div className="product-form-grid">
@@ -379,8 +372,6 @@ export default function EditCategory() {
                   className={errors.slug ? "input-error" : ""}
                 />
 
-                <small>Used in the category URL.</small>
-
                 {errors.slug && (
                   <small className="field-error">{errors.slug}</small>
                 )}
@@ -406,9 +397,10 @@ export default function EditCategory() {
 
                 <textarea
                   name="description"
-                  rows="5"
+                  rows="3"
                   value={formData.description}
                   onChange={handleChange}
+                  placeholder="Optional category description..."
                 />
               </div>
             </div>
@@ -417,10 +409,7 @@ export default function EditCategory() {
           {/* IMAGE */}
           <section className="product-form-card">
             <div className="product-form-card-header">
-              <div>
-                <h3>Category Image</h3>
-                <p>Manage the visual image for this category.</p>
-              </div>
+              <h3>Category Image</h3>
             </div>
 
             {formData.image ? (
@@ -454,7 +443,7 @@ export default function EditCategory() {
                   disabled={uploadingImage}
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  {uploadingImage ? <Loader2 size={28} className="animate-spin" /> : <ImagePlus size={28} strokeWidth={1.4} />}
+                  {uploadingImage ? <Loader2 size={24} className="animate-spin" /> : <ImagePlus size={24} strokeWidth={1.5} />}
                   <strong>{uploadingImage ? "Uploading..." : "Upload Category Image"}</strong>
                   <span>JPG, PNG, WEBP, or SVG</span>
                 </button>
@@ -466,9 +455,9 @@ export default function EditCategory() {
                     padding: "8px 14px",
                     backgroundColor: "#292524",
                     border: "1px solid #44403c",
-                    borderRadius: "6px",
+                    borderRadius: "2px",
                     color: "#d4af37",
-                    fontSize: "13px",
+                    fontSize: "12px",
                     fontWeight: "600",
                     cursor: "pointer",
                     display: "flex",
@@ -477,7 +466,7 @@ export default function EditCategory() {
                     gap: "6px",
                   }}
                 >
-                  <ImageIcon size={15} /> Choose from Media Library
+                  <ImageIcon size={14} /> Choose from Media Library
                 </button>
               </div>
             )}
@@ -499,10 +488,7 @@ export default function EditCategory() {
           {/* PUBLISHING */}
           <section className="product-form-card">
             <div className="product-form-card-header">
-              <div>
-                <h3>Publishing</h3>
-                <p>Control category visibility.</p>
-              </div>
+              <h3>Publishing</h3>
             </div>
 
             <label className="publish-option">
@@ -515,7 +501,6 @@ export default function EditCategory() {
               />
               <div>
                 <strong>Active</strong>
-                <span>Category is visible and available.</span>
               </div>
             </label>
 
@@ -529,7 +514,6 @@ export default function EditCategory() {
               />
               <div>
                 <strong>Inactive</strong>
-                <span>Category is hidden from customers.</span>
               </div>
             </label>
           </section>

@@ -348,12 +348,10 @@ export default function EditProduct() {
       <div className="add-product-header">
         <div>
           <Link to="/admin/products" className="back-link">
-            <ArrowLeft size={16} />
+            <ArrowLeft size={14} />
             Back to Products
           </Link>
-          <p className="eyebrow">CATALOGUE / PRODUCTS</p>
           <h1>Edit Product</h1>
-          <p>Update details, categories, pricing, and images for this piece.</p>
         </div>
 
         <div className="add-product-actions flex items-center gap-3">

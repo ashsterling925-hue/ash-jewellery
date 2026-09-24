@@ -1,95 +1,135 @@
 import { api } from "./client.js";
 
+// In-memory cache & pending promise registry for client-side deduplication
+const clientCache = new Map();
+const pendingRequests = new Map();
+
+async function cachedFetch(url, params = null, ttlMs = 45000) {
+  const cacheKey = `${url}:${params ? JSON.stringify(params) : ""}`;
+
+  // 1. Check if cached and still valid
+  const cached = clientCache.get(cacheKey);
+  if (cached && Date.now() < cached.expiresAt) {
+    return cached.data;
+  }
+
+  // 2. Check if a request is already in-flight for this key (deduplication)
+  if (pendingRequests.has(cacheKey)) {
+    return pendingRequests.get(cacheKey);
+  }
+
+  // 3. Dispatch fresh request
+  const requestPromise = (params ? api.get(url, params) : api.get(url))
+    .then((res) => {
+      clientCache.set(cacheKey, {
+        data: res,
+        expiresAt: Date.now() + ttlMs,
+      });
+      return res;
+    })
+    .finally(() => {
+      pendingRequests.delete(cacheKey);
+    });
+
+  pendingRequests.set(cacheKey, requestPromise);
+  return requestPromise;
+}
+
 /**
- * Public Storefront API Service
- * Interacts with /api/v1/storefront for customer-facing catalogue data
+ * Public Storefront API Service with In-Memory Client Caching and Request Deduplication
  */
 export const storefrontApi = {
   /**
    * Fetch published products with filters, search, pagination, and sorting
-   * @param {Object} params - { categorySlug, subcategorySlug, collectionSlug, search, attributeValueIds, sortBy, sortOrder, page, limit }
+   * Uses shorter 20s TTL for product queries
    */
   async getProducts(params = {}) {
-    return api.get("/storefront/products", params);
+    return cachedFetch("/storefront/products", params, 20000);
   },
 
   /**
    * Fetch single published product details by slug
-   * @param {string} slug
    */
   async getProductBySlug(slug) {
-    return api.get(`/storefront/products/${slug}`);
+    return cachedFetch(`/storefront/products/${slug}`, null, 30000);
   },
 
   /**
-   * Fetch active categories
+   * Fetch active categories (cached for 60s)
    */
   async getCategories(params = {}) {
-    return api.get("/storefront/categories", params);
+    return cachedFetch("/storefront/categories", params, 60000);
   },
 
   /**
    * Fetch single active category by slug
    */
   async getCategoryBySlug(slug) {
-    return api.get(`/storefront/categories/${slug}`);
+    return cachedFetch(`/storefront/categories/${slug}`, null, 60000);
   },
 
   /**
    * Fetch single active subcategory by slug
    */
   async getSubcategoryBySlug(slug) {
-    return api.get(`/storefront/subcategories/${slug}`);
+    return cachedFetch(`/storefront/subcategories/${slug}`, null, 60000);
   },
 
   /**
    * Fetch active collections
    */
   async getCollections(params = {}) {
-    return api.get("/storefront/collections", params);
+    return cachedFetch("/storefront/collections", params, 60000);
   },
 
   /**
    * Fetch single active collection by slug
    */
   async getCollectionBySlug(slug) {
-    return api.get(`/storefront/collections/${slug}`);
+    return cachedFetch(`/storefront/collections/${slug}`, null, 60000);
   },
 
   /**
    * Fetch dynamic filterable attributes with active values
    */
   async getFilters() {
-    return api.get("/storefront/filters");
+    return cachedFetch("/storefront/filters", null, 120000);
   },
 
   /**
    * Fetch active hero section configuration
    */
   async getHero() {
-    return api.get("/storefront/hero");
+    return cachedFetch("/storefront/hero", null, 60000);
   },
 
   /**
    * Fetch active promotional banners
    */
   async getBanners(params = {}) {
-    return api.get("/storefront/banners", params);
+    return cachedFetch("/storefront/banners", params, 60000);
   },
 
   /**
    * Fetch active special offers
    */
   async getSpecialOffers() {
-    return api.get("/storefront/special-offers");
+    return cachedFetch("/storefront/special-offers", null, 60000);
   },
 
   /**
-   * Fetch dynamic homepage merchandising product sections (Best Sellers, New Arrivals, Featured, Trending)
-   * @param {Object} params - { limit, section }
+   * Fetch dynamic homepage merchandising product sections
    */
   async getMerchandising(params = {}) {
-    return api.get("/storefront/merchandising", params);
+    return cachedFetch("/storefront/merchandising", params, 60000);
+  },
+
+  /**
+   * Invalidate client-side cache
+   */
+  clearCache() {
+    clientCache.clear();
+    pendingRequests.clear();
   },
 };
 

@@ -202,19 +202,13 @@ export default function Banners() {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 w-full">
       {/* Top Header */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-[#e7dfd3] pb-4">
         <div>
-          <p className="text-[10px] font-bold tracking-[0.25em] text-[#b99657] uppercase">
-            BANNERS / CLICKABLE SLIDES
-          </p>
           <h1 className="font-serif text-2xl font-medium tracking-wide text-[#1e1c19] sm:text-3xl">
             Clickable Hero Banners
           </h1>
-          <p className="text-xs text-[#716b62] mt-0.5">
-            Add clickable photos with their destination links and display order in the hero carousel.
-          </p>
         </div>
 
         {/* Link to Page 1: Non-Clickable Homepage Hero */}
@@ -243,7 +237,7 @@ export default function Banners() {
       )}
 
       {/* Main Container */}
-      <div className="border border-[#e7dfd3] bg-[#fffdf9] p-6 shadow-xs">
+      <div className="border border-[#e7dfd3] bg-[#fffdf9] p-6 shadow-xs w-full">
         {/* Action Header */}
         <div className="flex items-center justify-between pb-5 mb-5 border-b border-[#eee5d8]">
           <span className="text-xs font-semibold uppercase tracking-wider text-[#5c5448]">

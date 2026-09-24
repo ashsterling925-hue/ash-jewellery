@@ -202,11 +202,9 @@ export default function EditSubcategories() {
             className="back-link cursor-pointer"
             onClick={() => nav("/admin/subcategories")}
           >
-            <ArrowLeft size={15} /> Back to Subcategories
+            <ArrowLeft size={14} /> Back to Subcategories
           </button>
-          <div className="eyebrow">CATALOGUE / SUBCATEGORIES</div>
           <h1>Edit Subcategory</h1>
-          <p>Update this catalogue record and parent category assignment.</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -240,7 +238,7 @@ export default function EditSubcategories() {
       </div>
 
       {apiError && (
-        <div style={{ padding: "14px 18px", color: "#a33d32", background: "#fdf2f2", borderRadius: "6px", marginBottom: "20px" }}>
+        <div style={{ padding: "12px 16px", color: "#a33d32", background: "#fdf2f2", borderRadius: "4px", marginBottom: "16px", fontSize: "13px" }}>
           <strong>Error: </strong> {apiError}
         </div>
       )}
@@ -322,7 +320,8 @@ export default function EditSubcategories() {
               <label className="form-field full-width">
                 <span>Description</span>
                 <textarea
-                  rows="5"
+                  rows="3"
+                  placeholder="Optional subcategory description..."
                   value={formData.description}
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
@@ -349,7 +348,6 @@ export default function EditSubcategories() {
               />
               <div>
                 <strong>Active</strong>
-                <span>Subcategory is visible and available.</span>
               </div>
             </label>
 
@@ -363,10 +361,11 @@ export default function EditSubcategories() {
               />
               <div>
                 <strong>Inactive</strong>
-                <span>Subcategory is hidden from customers.</span>
               </div>
             </label>
+          </div>
 
+          <div className="product-form-card">
             <button
               className="save-product-btn"
               type="submit"

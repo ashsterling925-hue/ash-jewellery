@@ -350,9 +350,7 @@ export default function Products() {
 
       <section className="products-heading">
         <div>
-          <p className="eyebrow">CATALOGUE</p>
           <h1>Products</h1>
-          <p>Manage your jewellery catalogue, products and publishing status.</p>
         </div>
 
         <Link to="/admin/products/new" className="add-product-btn">

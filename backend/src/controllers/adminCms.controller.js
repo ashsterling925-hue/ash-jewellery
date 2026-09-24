@@ -2,6 +2,7 @@ import { heroService } from "../services/hero.service.js";
 import { bannerService } from "../services/banner.service.js";
 import { specialOfferService } from "../services/specialOffer.service.js";
 import { sendSuccess, sendPaginated } from "../utils/apiResponse.js";
+import { memoryCache } from "../utils/cache.js";
 
 /**
  * Admin CMS Controller
@@ -27,6 +28,7 @@ export const adminCmsController = {
   async saveHero(req, res, next) {
     try {
       const hero = await heroService.saveHero(req.body);
+      memoryCache.flushPrefix("storefront:hero");
       return sendSuccess(res, {
         message: "Hero configuration saved successfully",
         data: hero,
@@ -39,6 +41,7 @@ export const adminCmsController = {
   async updateHero(req, res, next) {
     try {
       const hero = await heroService.updateHero(req.params.id, req.body);
+      memoryCache.flushPrefix("storefront:hero");
       return sendSuccess(res, {
         message: "Hero configuration updated successfully",
         data: hero,
@@ -80,6 +83,7 @@ export const adminCmsController = {
   async createBanner(req, res, next) {
     try {
       const banner = await bannerService.createBanner(req.body);
+      memoryCache.flushPrefix("storefront:banners");
       return sendSuccess(res, {
         message: "Banner created successfully",
         data: banner,
@@ -93,6 +97,7 @@ export const adminCmsController = {
   async updateBanner(req, res, next) {
     try {
       const banner = await bannerService.updateBanner(req.params.id, req.body);
+      memoryCache.flushPrefix("storefront:banners");
       return sendSuccess(res, {
         message: "Banner updated successfully",
         data: banner,
@@ -105,6 +110,7 @@ export const adminCmsController = {
   async deleteBanner(req, res, next) {
     try {
       const result = await bannerService.deleteBanner(req.params.id);
+      memoryCache.flushPrefix("storefront:banners");
       return sendSuccess(res, {
         message: result.message,
         data: result.banner,

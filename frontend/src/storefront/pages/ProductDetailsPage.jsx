@@ -93,15 +93,19 @@ export default function ProductDetailsPage() {
   if (loading) {
     return (
       <SiteLayout>
+        {/* Top Gold Shimmer Progress Line */}
+        <div className="w-full h-[2.5px] luxury-gold-bar fixed top-0 left-0 z-50 shadow-xs" />
+
         <div className="bg-[#fffdfa] py-12 min-h-screen">
           <div className="container max-w-6xl mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 animate-pulse">
-              <div className="aspect-square bg-[#eee7dd] rounded-sm" />
-              <div className="space-y-4">
-                <div className="h-8 w-3/4 bg-[#eee7dd] rounded" />
-                <div className="h-6 w-28 bg-[#eee7dd] rounded" />
-                <div className="h-20 w-full bg-[#eee7dd] rounded" />
-                <div className="h-12 w-full bg-[#eee7dd] rounded" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              <div className="aspect-square luxury-shimmer border border-[#e7dfd3]" />
+              <div className="space-y-5">
+                <div className="h-4 w-28 luxury-shimmer-subtle rounded-xs" />
+                <div className="h-8 w-3/4 luxury-shimmer-subtle rounded-xs" />
+                <div className="h-6 w-32 luxury-shimmer-subtle rounded-xs" />
+                <div className="h-24 w-full luxury-shimmer-subtle rounded-xs" />
+                <div className="h-12 w-full luxury-shimmer rounded-xs" />
               </div>
             </div>
           </div>

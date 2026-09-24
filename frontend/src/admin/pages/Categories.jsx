@@ -175,9 +175,7 @@ export default function Categories() {
       ================================================= */}
       <section className="products-heading">
         <div>
-          <p className="eyebrow">CATALOGUE</p>
           <h1>Categories</h1>
-          <p>Organise your jewellery catalogue into clear product categories.</p>
         </div>
 
         <button
