@@ -1,5 +1,12 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  Outlet,
+  useLocation,
+} from "react-router-dom";
 import { useAuth, AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/routes/ProtectedRoute";
 import RouteErrorBoundary from "@/routes/RouteErrorBoundary";
@@ -7,12 +14,22 @@ import HomeSkeleton from "@/storefront/components/HomeSkeleton";
 
 // Lazy-loaded storefront pages
 const HomePage = lazy(() => import("@/storefront/pages/HomePage"));
-const ProductDetailsPage = lazy(() => import("@/storefront/pages/ProductDetailsPage"));
+const ProductDetailsPage = lazy(
+  () => import("@/storefront/pages/ProductDetailsPage"),
+);
 const CataloguePage = lazy(() => import("@/storefront/pages/CataloguePage"));
 const LoginPage = lazy(() => import("@/storefront/pages/auth/LoginPage"));
-const ForgotPasswordPage = lazy(() => import("@/storefront/pages/auth/ForgotPasswordPage"));
+const ForgotPasswordPage = lazy(
+  () => import("@/storefront/pages/auth/ForgotPasswordPage"),
+);
 const RegisterPage = lazy(() => import("@/storefront/pages/auth/RegisterPage"));
-const ResetPasswordPage = lazy(() => import("@/storefront/pages/auth/ResetPasswordPage"));
+const ResetPasswordPage = lazy(
+  () => import("@/storefront/pages/auth/ResetPasswordPage"),
+);
+const AboutPage = lazy(() => import("../storefront/pages/AboutPage"));
+const TermsAndConditionsPage = lazy(
+  () => import("../storefront/pages/TermsAndConditionsPage"),
+);
 
 // Lazy-loaded Admin Layout & Administration Views
 const AdminLayout = lazy(() => import("@/admin/layouts/AdminLayout"));
@@ -23,15 +40,29 @@ const EditProduct = lazy(() => import("@/admin/pages/EditProduct"));
 const Categories = lazy(() => import("@/admin/pages/Categories"));
 const AddCategory = lazy(() => import("@/admin/pages/AddCategory"));
 const EditCategory = lazy(() => import("@/admin/pages/EditCategory"));
-const Subcategories = lazy(() => import("@/admin/pages/subcategories/Subcategories"));
-const AddSubcategories = lazy(() => import("@/admin/pages/subcategories/AddSubcategories"));
-const EditSubcategories = lazy(() => import("@/admin/pages/subcategories/EditSubcategories"));
+const Subcategories = lazy(
+  () => import("@/admin/pages/subcategories/Subcategories"),
+);
+const AddSubcategories = lazy(
+  () => import("@/admin/pages/subcategories/AddSubcategories"),
+);
+const EditSubcategories = lazy(
+  () => import("@/admin/pages/subcategories/EditSubcategories"),
+);
 const Collections = lazy(() => import("@/admin/pages/collections/Collections"));
-const AddCollections = lazy(() => import("@/admin/pages/collections/AddCollections"));
-const EditCollections = lazy(() => import("@/admin/pages/collections/EditCollections"));
+const AddCollections = lazy(
+  () => import("@/admin/pages/collections/AddCollections"),
+);
+const EditCollections = lazy(
+  () => import("@/admin/pages/collections/EditCollections"),
+);
 const Attributes = lazy(() => import("@/admin/pages/attributes/Attributes"));
-const AddAttributes = lazy(() => import("@/admin/pages/attributes/AddAttributes"));
-const EditAttributes = lazy(() => import("@/admin/pages/attributes/EditAttributes"));
+const AddAttributes = lazy(
+  () => import("@/admin/pages/attributes/AddAttributes"),
+);
+const EditAttributes = lazy(
+  () => import("@/admin/pages/attributes/EditAttributes"),
+);
 const Tags = lazy(() => import("@/admin/pages/tags/Tags"));
 const AddTags = lazy(() => import("@/admin/pages/tags/AddTags"));
 const EditTags = lazy(() => import("@/admin/pages/tags/EditTags"));
@@ -147,161 +178,199 @@ export default function AppRoutes() {
 
             {/* Storefront Routes (Blocked for logged-in Admin/Staff users) */}
             <Route element={<StorefrontGuard />}>
-            {/* Critical Home route lazy-loaded with instant luxury skeleton */}
+              {/* Critical Home route lazy-loaded with instant luxury skeleton */}
+              <Route
+                path="/"
+                element={
+                  <Suspense fallback={<HomeSkeleton />}>
+                    <HomePage />
+                  </Suspense>
+                }
+              />
+
+              <Route
+                path="/product/:slug"
+                element={
+                  <Suspense fallback={<StorefrontLoadingFallback />}>
+                    <ProductDetailsPage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/category"
+                element={
+                  <Suspense fallback={<StorefrontLoadingFallback />}>
+                    <CataloguePage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/catalogue"
+                element={
+                  <Suspense fallback={<StorefrontLoadingFallback />}>
+                    <CataloguePage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/collections"
+                element={
+                  <Suspense fallback={<StorefrontLoadingFallback />}>
+                    <CataloguePage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/category/:categorySlug"
+                element={
+                  <Suspense fallback={<StorefrontLoadingFallback />}>
+                    <CataloguePage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/subcategory/:subcategorySlug"
+                element={
+                  <Suspense fallback={<StorefrontLoadingFallback />}>
+                    <CataloguePage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/collection/:collectionSlug"
+                element={
+                  <Suspense fallback={<StorefrontLoadingFallback />}>
+                    <CataloguePage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/search"
+                element={
+                  <Suspense fallback={<StorefrontLoadingFallback />}>
+                    <CataloguePage />
+                  </Suspense>
+                }
+              />
+              <Route
+                path="/bangles"
+                element={
+                  <Suspense fallback={<StorefrontLoadingFallback />}>
+                    <CataloguePage forcedCategorySlug="bangles" />
+                  </Suspense>
+                }
+              />
+
+              <Route
+                path="/about"
+                element={
+                  <Suspense fallback={<StorefrontLoadingFallback />}>
+                    <AboutPage />
+                  </Suspense>
+                }
+              />
+
+              <Route
+                path="/terms-and-conditions"
+                element={
+                  <Suspense fallback={<StorefrontLoadingFallback />}>
+                    <TermsAndConditionsPage />
+                  </Suspense>
+                }
+              />
+            </Route>
+            {/* Admin Routes (Protected and fully lazy loaded) */}
             <Route
-              path="/"
+              path="/admin"
               element={
-                <Suspense fallback={<HomeSkeleton />}>
-                  <HomePage />
-                </Suspense>
+                <ProtectedRoute>
+                  <Suspense fallback={<AdminLoadingFallback />}>
+                    <AdminLayout />
+                  </Suspense>
+                </ProtectedRoute>
               }
+            >
+              <Route
+                index
+                element={<Navigate to="/admin/dashboard" replace />}
+              />
+              <Route path="dashboard" element={<Dashboard />} />
+
+              {/* Products */}
+              <Route path="products" element={<Products />} />
+              <Route path="products/new" element={<AddProduct />} />
+              <Route path="products/:id/edit" element={<EditProduct />} />
+
+              {/* Categories */}
+              <Route path="categories" element={<Categories />} />
+              <Route path="categories/new" element={<AddCategory />} />
+              <Route path="categories/:id/edit" element={<EditCategory />} />
+
+              {/* Subcategories */}
+              <Route path="subcategories" element={<Subcategories />} />
+              <Route path="subcategories/new" element={<AddSubcategories />} />
+              <Route
+                path="subcategories/:id/edit"
+                element={<EditSubcategories />}
+              />
+
+              {/* Collections */}
+              <Route path="collections" element={<Collections />} />
+              <Route path="collections/new" element={<AddCollections />} />
+              <Route
+                path="collections/:id/edit"
+                element={<EditCollections />}
+              />
+
+              {/* Attributes */}
+              <Route path="attributes" element={<Attributes />} />
+              <Route path="attributes/new" element={<AddAttributes />} />
+              <Route path="attributes/:id/edit" element={<EditAttributes />} />
+
+              {/* Tags */}
+              <Route path="tags" element={<Tags />} />
+              <Route path="tags/new" element={<AddTags />} />
+              <Route path="tags/:id/edit" element={<EditTags />} />
+
+              {/* Content */}
+              <Route path="homepage" element={<Homepage />} />
+              <Route path="banners" element={<Banners />} />
+              <Route path="navigation" element={<Navigation />} />
+              <Route path="pages" element={<Pages />} />
+
+              {/* Management */}
+              <Route path="customers" element={<Customers />} />
+              <Route path="enquiries" element={<Enquiries />} />
+              <Route path="media" element={<Media />} />
+              <Route path="analytics" element={<Analytics />} />
+              <Route path="settings" element={<Settings />} />
+
+              {/* Fallback inside admin */}
+              <Route
+                path="*"
+                element={<Navigate to="/admin/dashboard" replace />}
+              />
+            </Route>
+
+            {/* Friendly convenience redirects for direct URLs */}
+            <Route
+              path="/dashboard"
+              element={<Navigate to="/admin/dashboard" replace />}
+            />
+            <Route
+              path="/products"
+              element={<Navigate to="/admin/products" replace />}
+            />
+            <Route
+              path="/categories"
+              element={<Navigate to="/admin/categories" replace />}
             />
 
-            <Route
-              path="/product/:slug"
-              element={
-                <Suspense fallback={<StorefrontLoadingFallback />}>
-                  <ProductDetailsPage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/category"
-              element={
-                <Suspense fallback={<StorefrontLoadingFallback />}>
-                  <CataloguePage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/catalogue"
-              element={
-                <Suspense fallback={<StorefrontLoadingFallback />}>
-                  <CataloguePage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/collections"
-              element={
-                <Suspense fallback={<StorefrontLoadingFallback />}>
-                  <CataloguePage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/category/:categorySlug"
-              element={
-                <Suspense fallback={<StorefrontLoadingFallback />}>
-                  <CataloguePage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/subcategory/:subcategorySlug"
-              element={
-                <Suspense fallback={<StorefrontLoadingFallback />}>
-                  <CataloguePage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/collection/:collectionSlug"
-              element={
-                <Suspense fallback={<StorefrontLoadingFallback />}>
-                  <CataloguePage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/search"
-              element={
-                <Suspense fallback={<StorefrontLoadingFallback />}>
-                  <CataloguePage />
-                </Suspense>
-              }
-            />
-            <Route
-              path="/bangles"
-              element={
-                <Suspense fallback={<StorefrontLoadingFallback />}>
-                  <CataloguePage forcedCategorySlug="bangles" />
-                </Suspense>
-              }
-            />
-          </Route>
-
-          {/* Admin Routes (Protected and fully lazy loaded) */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute>
-                <Suspense fallback={<AdminLoadingFallback />}>
-                  <AdminLayout />
-                </Suspense>
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-
-            {/* Products */}
-            <Route path="products" element={<Products />} />
-            <Route path="products/new" element={<AddProduct />} />
-            <Route path="products/:id/edit" element={<EditProduct />} />
-
-            {/* Categories */}
-            <Route path="categories" element={<Categories />} />
-            <Route path="categories/new" element={<AddCategory />} />
-            <Route path="categories/:id/edit" element={<EditCategory />} />
-
-            {/* Subcategories */}
-            <Route path="subcategories" element={<Subcategories />} />
-            <Route path="subcategories/new" element={<AddSubcategories />} />
-            <Route path="subcategories/:id/edit" element={<EditSubcategories />} />
-
-            {/* Collections */}
-            <Route path="collections" element={<Collections />} />
-            <Route path="collections/new" element={<AddCollections />} />
-            <Route path="collections/:id/edit" element={<EditCollections />} />
-
-            {/* Attributes */}
-            <Route path="attributes" element={<Attributes />} />
-            <Route path="attributes/new" element={<AddAttributes />} />
-            <Route path="attributes/:id/edit" element={<EditAttributes />} />
-
-            {/* Tags */}
-            <Route path="tags" element={<Tags />} />
-            <Route path="tags/new" element={<AddTags />} />
-            <Route path="tags/:id/edit" element={<EditTags />} />
-
-            {/* Content */}
-            <Route path="homepage" element={<Homepage />} />
-            <Route path="banners" element={<Banners />} />
-            <Route path="navigation" element={<Navigation />} />
-            <Route path="pages" element={<Pages />} />
-
-            {/* Management */}
-            <Route path="customers" element={<Customers />} />
-            <Route path="enquiries" element={<Enquiries />} />
-            <Route path="media" element={<Media />} />
-            <Route path="analytics" element={<Analytics />} />
-            <Route path="settings" element={<Settings />} />
-
-            {/* Fallback inside admin */}
-            <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
-          </Route>
-
-          {/* Friendly convenience redirects for direct URLs */}
-          <Route path="/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="/products" element={<Navigate to="/admin/products" replace />} />
-          <Route path="/categories" element={<Navigate to="/admin/categories" replace />} />
-
-          {/* Global Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </RouteErrorBoundary>
-    </BrowserRouter>
-  </AuthProvider>
+            {/* Global Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </RouteErrorBoundary>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
