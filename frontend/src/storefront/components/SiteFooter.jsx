@@ -1,4 +1,3 @@
-import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { storefrontApi } from "@/lib/api/storefrontApi";
@@ -8,6 +7,7 @@ function SiteFooter() {
 
   useEffect(() => {
     let isMounted = true;
+
     async function loadFooterCategories() {
       try {
         const response = await storefrontApi.getCategories({
@@ -15,6 +15,7 @@ function SiteFooter() {
           sortBy: "sortOrder",
           sortOrder: "asc",
         });
+
         if (isMounted && response?.data) {
           setCategories(response.data);
         }
@@ -22,7 +23,9 @@ function SiteFooter() {
         console.error("Failed to load footer categories:", err);
       }
     }
+
     loadFooterCategories();
+
     return () => {
       isMounted = false;
     };
@@ -31,18 +34,18 @@ function SiteFooter() {
   return (
     <footer id="contact" className="site-footer">
       <div className="container footer-grid">
-        <div>
+        {/* Brand */}
+        <div className="footer-column footer-about">
           <Link to="/" className="brand footer-brand">
             ASH
             <span>JEWELLERY</span>
           </Link>
 
-          <p>
-            Heritage-inspired silver jewellery, handcrafted with care.
-          </p>
+          <p>Heritage-inspired silver jewellery, handcrafted with care.</p>
         </div>
 
-        <div>
+        {/* Explore */}
+        <div className="footer-column">
           <h4>EXPLORE</h4>
 
           {categories.map((cat) => (
@@ -51,34 +54,37 @@ function SiteFooter() {
             </Link>
           ))}
 
-          <a href="/#collections">Collections</a>
-          <a href="/#story">Our Story</a>
+          <Link to="/about">About Us</Link>
         </div>
 
-        <div>
-          <h4>HELP & SUPPORT</h4>
+        {/* Help & Legal */}
+        <div className="footer-column">
+          <h4>HELP &amp; LEGAL</h4>
 
-          <a href="/#contact">Contact Us</a>
-          <a href="/#contact">Shipping & Returns</a>
-          <a href="/#contact">Care Guide</a>
+          <a href="mailto:ashsterling925@gmail.com">Contact Us</a>
+
+          <Link to="/terms-and-conditions">Terms &amp; Conditions</Link>
         </div>
 
-        <div>
-          <h4>STAY CONNECTED</h4>
+        {/* Contact */}
+        <div className="footer-column footer-contact">
+          <h4>GET IN TOUCH</h4>
 
-          <p>New collections, stories and offers.</p>
+          <p>Have a question about our jewellery or your enquiry?</p>
 
-          <div className="newsletter">
-            <input
-              type="email"
-              placeholder="Email address"
-              aria-label="Email address"
-            />
+          <p>
+            <strong>Email</strong>
+            <br />
+            <a href="mailto:ashsterling925@gmail.com">
+              ashsterling925@gmail.com
+            </a>
+          </p>
 
-            <button type="button" aria-label="Subscribe">
-              <ArrowRight size={16} />
-            </button>
-          </div>
+          <p>
+            <strong>Phone</strong>
+            <br />
+            <a href="tel:+918218851894">+91 8218851894</a>
+          </p>
         </div>
       </div>
 
