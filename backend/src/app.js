@@ -14,6 +14,9 @@ import apiRoutes from "./routes/index.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
+// Trust reverse proxy (Render, AWS, Cloudflare, etc.) for client IP detection & rate limiting
+app.set("trust proxy", 1);
+
 // 1. Security Headers & CORS
 app.use(
   helmet({

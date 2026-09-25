@@ -9,6 +9,7 @@ export const apiLimiter = rateLimit({
   max: env.RATE_LIMIT_MAX, // limit each IP to 100 requests per windowMs
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
   message: {
     success: false,
     message: "Too many requests from this IP, please try again later.",
@@ -26,6 +27,7 @@ export const authLimiter = rateLimit({
   max: 10, // 10 attempts per 15 minutes
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
   message: {
     success: false,
     message: "Too many login attempts. Please try again after 15 minutes.",
