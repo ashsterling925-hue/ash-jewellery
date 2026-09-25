@@ -20,9 +20,23 @@ app.use(
     crossOriginResourcePolicy: { policy: "cross-origin" },
   })
 );
+
+const allowedOrigins = [
+  ...new Set(
+    env.FRONTEND_URL.split(",")
+      .flatMap((s) => {
+        const trimmed = s.trim();
+        if (!trimmed) return [];
+        const withoutSlash = trimmed.replace(/\/+$/, "");
+        return [withoutSlash, `${withoutSlash}/`];
+      })
+      .filter(Boolean)
+  ),
+];
+
 app.use(
   cors({
-    origin: env.FRONTEND_URL.split(",").map((s) => s.trim()),
+    origin: allowedOrigins,
     credentials: true,
   })
 );

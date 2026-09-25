@@ -3,15 +3,15 @@ import { env } from "./config/env.js";
 import { checkDatabaseConnection, disconnectDatabase } from "./config/database.js";
 
 const server = app.listen(env.PORT, async () => {
-  console.log(`[ASH Backend] 🚀 Server running in ${env.NODE_ENV} mode on http://localhost:${env.PORT}`);
-  console.log(`[ASH Backend] 🩺 Health endpoint: http://localhost:${env.PORT}/api/v1/health`);
+  console.log(`[ASH Backend] Server running in ${env.NODE_ENV} mode on http://localhost:${env.PORT}`);
+  console.log(`[ASH Backend] Health endpoint: http://localhost:${env.PORT}/api/v1/health`);
 
   // Verify database connectivity
   const dbCheck = await checkDatabaseConnection();
   if (dbCheck.connected) {
-    console.log("[ASH Backend] 🟢 Database: Connected successfully to PostgreSQL");
+    console.log("[ASH Backend] Database: Connected successfully to PostgreSQL");
   } else {
-    console.warn(`[ASH Backend] 🟡 Database: Not connected (${dbCheck.message})`);
+    console.warn(`[ASH Backend] Database: Not connected (${dbCheck.message})`);
   }
 });
 

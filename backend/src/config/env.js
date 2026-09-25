@@ -13,7 +13,9 @@ const envSchema = z.object({
     .enum(["development", "production", "test"])
     .default("development"),
   PORT: z.coerce.number().int().positive().default(5000),
-  FRONTEND_URL: z.string().default("http://localhost:5173"),
+  FRONTEND_URL: z
+    .string()
+    .default("http://localhost:5173,https://www.ashforsilver.com"),
   DATABASE_URL: z.string().optional().default(""),
   JWT_SECRET: z.string().default("dev-jwt-secret-ash-jewellery-do-not-use-in-prod"),
   JWT_ACCESS_SECRET: z.string().default(process.env.JWT_SECRET || "dev-jwt-access-secret-ash-jewellery-do-not-use-in-prod"),
